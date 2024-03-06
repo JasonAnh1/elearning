@@ -18,9 +18,13 @@ public class CoursePart extends DateAudit{
     private long courseId;
     private String title;
     private int partNumber;
-    @ManyToOne(cascade = CascadeType.PERSIST)
-    @JoinColumn(name = "courseId", referencedColumnName = "id", insertable = false, updatable = false)
-    private Course course;
+
+//    @ManyToOne(cascade = CascadeType.PERSIST)
+//    @JoinColumn(name = "courseId", referencedColumnName = "id", insertable = false, updatable = false)
+//    private Course course;
+
     @OneToMany(mappedBy = "part",fetch = FetchType.EAGER,cascade = CascadeType.ALL)
     private Set<Lesson> lessons;
+
+
 }

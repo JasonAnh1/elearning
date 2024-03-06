@@ -1,5 +1,7 @@
 package com.jason.elearning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.jason.elearning.entity.constants.LessonType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,8 +22,15 @@ public class Lesson {
     private String content;
     private int passThreshold;
     private long coursePartId;
-    private String type;
+    private LessonType type;
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "coursePartId", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnore
     private CoursePart part;
+    private Long mediaId;
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
+    private UploadFile media;
+
+
 }

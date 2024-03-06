@@ -21,11 +21,11 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/")
+@RequestMapping("/api/")
 @Transactional
 public class PaymentController {
 
-    @GetMapping("publish/pay")
+    @GetMapping("v1/publish/pay")
     public ResponseEntity<?> pay() throws Exception {
 
         String orderType = "other";
