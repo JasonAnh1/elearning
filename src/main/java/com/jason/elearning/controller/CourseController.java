@@ -2,6 +2,7 @@ package com.jason.elearning.controller;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
+import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.response.BaseResponse;
 import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.service.course.CourseCategoryService;
@@ -25,6 +26,17 @@ public class CourseController extends BaseController{
     private CourseCategoryService categoryService;
     @Autowired
     private CoursePartService coursePartService;
+    @PostMapping("v1/create-quizzes")
+    public ResponseEntity<?> createQuizz(@Valid @RequestBody final QuizzesRequest request) {
+        try {
+            if(request == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( coursePartService.addQuizzes(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
     @PostMapping("v1/create-course")
     public ResponseEntity<?> createCourse(@Valid @RequestBody final Course request) {
         try {
@@ -40,6 +52,7 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+
     @PostMapping("v1/create-lesson")
     public ResponseEntity<?> createLesson(@Valid @RequestBody final Lesson request) {
         try {
@@ -72,6 +85,24 @@ public class CourseController extends BaseController{
         try {
 
             return ResponseEntity.ok( courseService.getCourseById(courseId));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/publish/get-lesson")
+    public ResponseEntity<?> getLessonById(@RequestParam(required = false) Long lessonId) {
+        try {
+
+            return ResponseEntity.ok( coursePartService.getLessonById(lessonId));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/get-quizzes")
+    public ResponseEntity<?> getQuizzes(@RequestParam(required = false) Long lessonId) {
+        try {
+
+            return ResponseEntity.ok( coursePartService.listQuizzes(lessonId));
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }

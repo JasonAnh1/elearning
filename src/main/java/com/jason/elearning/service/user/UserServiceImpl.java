@@ -2,9 +2,13 @@ package com.jason.elearning.service.user;
 
 
 import com.jason.elearning.configuration.Translator;
+import com.jason.elearning.entity.Enroll;
 import com.jason.elearning.entity.Role;
 import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.constants.EnrollStatus;
 import com.jason.elearning.entity.constants.RoleName;
+import com.jason.elearning.entity.request.EnrollRequest;
+import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.repository.user.RoleRepository;
 import com.jason.elearning.security.CustomUserDetailsService;
 import com.jason.elearning.security.JwtTokenProvider;
@@ -21,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -40,7 +45,8 @@ class UserServiceImpl extends BaseService implements UserService {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
-
+    @Autowired
+    private EnrollRepository enrollRepository;
 
     /////////////////////User///////////
 
@@ -110,6 +116,23 @@ class UserServiceImpl extends BaseService implements UserService {
     @Override
     public User updateProfile(User request) throws Exception {
         return null;
+    }
+
+    @Override
+    public List<Enroll> enrollACourse(EnrollRequest request) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        List<Enroll> enrollList = new LinkedList<>();
+        for(long courseId:request.getCourseIds()){
+            Enroll e = new Enroll();
+            e.setCourseId(courseId);
+            e.setUserId(user.getId());
+            e.setStatus(EnrollStatus.ENROLLED);
+            enrollList.add(e);
+        }
+        return  enrollRepository.saveAll(enrollList);
     }
 
     @Override

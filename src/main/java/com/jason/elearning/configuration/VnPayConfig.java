@@ -9,7 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-public class VnPayConfig {
+public class    VnPayConfig {
 
     public static String vnp_Version = "2.1.0";
     public static String vnp_Command = "pay";

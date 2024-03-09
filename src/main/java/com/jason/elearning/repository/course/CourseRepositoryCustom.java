@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface CourseRepositoryCustom {
     List<Course> getCourse(int page, String title,Long categoryId,Long authorId);
+    Long getEnrollNumber(Long courseId,Long learnerId);
 }

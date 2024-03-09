@@ -2,6 +2,7 @@ package com.jason.elearning.repository.course;
 
 import com.jason.elearning.entity.CoursePart;
 import com.jason.elearning.entity.QCoursePart;
+import com.jason.elearning.entity.QLesson;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
 
@@ -15,6 +16,8 @@ public class CoursePartRepositoryImpl extends BaseRepository implements CoursePa
         QCoursePart qCoursePart = QCoursePart.coursePart;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qCoursePart.deleted.eq(false)).and(qCoursePart.courseId.eq(courseId));
+        QLesson qLesson =QLesson.lesson;
+        BooleanBuilder builder2 = new BooleanBuilder();
 
         return query().from(qCoursePart)
                 .where(builder)

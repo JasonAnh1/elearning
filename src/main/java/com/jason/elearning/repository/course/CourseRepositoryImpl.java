@@ -2,6 +2,7 @@ package com.jason.elearning.repository.course;
 
 import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.QCourse;
+import com.jason.elearning.entity.QEnroll;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
 import lombok.var;
@@ -33,5 +34,18 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .limit(PAGE_SIZE)
                 .orderBy(qCourse.id.desc());
         return a.fetch();
+    }
+
+    @Override
+    public Long getEnrollNumber(Long courseId, Long learnerId) {
+        QEnroll qEnroll = QEnroll.enroll;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qEnroll.courseId.eq(courseId));
+        builder.and(qEnroll.userId.eq(learnerId));
+
+        return query()
+                .from(qEnroll)
+                .where(builder)
+                .fetchCount();
     }
 }

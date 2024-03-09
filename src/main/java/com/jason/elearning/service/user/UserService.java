@@ -1,6 +1,8 @@
 package com.jason.elearning.service.user;
 
+import com.jason.elearning.entity.Enroll;
 import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.request.EnrollRequest;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ public interface UserService {
 
     User updateProfile(User request) throws Exception;
 
+    List<Enroll> enrollACourse(EnrollRequest request) throws Exception;
 
 
     /////////////////////Admin///////////

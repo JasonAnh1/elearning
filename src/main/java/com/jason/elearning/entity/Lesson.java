@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Table(name = "lesson")
 @Getter
 @Setter
-public class Lesson {
+public class Lesson extends DateAudit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
