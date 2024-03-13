@@ -38,6 +38,11 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     }
 
     @Override
+    public Long countListCourse(Long categoryId, String title, Long authorId) throws Exception {
+        return courseRepository.countGetCourse(title,categoryId,authorId);
+    }
+
+    @Override
     public Course getCourseById(Long courseId) throws Exception {
         return courseRepository.findById(courseId).orElseThrow(()-> new Exception("can not find course"));
     }

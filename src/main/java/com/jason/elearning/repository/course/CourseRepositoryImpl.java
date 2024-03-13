@@ -48,4 +48,25 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .where(builder)
                 .fetchCount();
     }
+
+    @Override
+    public Long countGetCourse(String title, Long categoryId, Long authorId) {
+        QCourse qCourse = QCourse.course;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qCourse.deleted.eq(false));
+        if(StringUtils.isNotBlank(title)){
+            builder.and(qCourse.title.like("%"+ title + "%"));
+        }
+        if(categoryId != null){
+            builder.and(qCourse.categoryId.eq(categoryId));
+        }
+        if(authorId != null){
+            builder.and(qCourse.authorId.eq(authorId));
+        }
+
+        return   query().from(qCourse)
+                .where(builder)
+                .select(qCourse)
+                .orderBy(qCourse.id.desc()).fetchCount();
+    }
 }

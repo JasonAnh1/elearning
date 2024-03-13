@@ -56,7 +56,11 @@ public class UserRepositoryImpl extends BaseRepository implements UserRepository
         if(!StringUtils.isEmpty(name)){
             builder.and(qUser.name.like("%"+name+"%"));
         }
-        return query().select(qUser).from(qUser).where(builder)
+        return query()
+                .select(qUser)
+                .from(qUser)
+                .where(builder)
                 .fetchCount();
     }
+
 }

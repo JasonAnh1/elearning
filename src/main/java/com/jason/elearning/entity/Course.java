@@ -1,11 +1,12 @@
 package com.jason.elearning.entity;
 
 import com.jason.elearning.entity.constants.CourseLevel;
+import com.jason.elearning.entity.constants.CourseStatus;
+import com.jason.elearning.entity.constants.CourseType;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.Set;
 
 @Entity
 @Table(name = "course")
@@ -38,8 +39,8 @@ public class Course extends DateAudit{
     private String requirement;
     private int rating;
     private String advertise;
-    private String status;
-
+    private CourseStatus status;
+    private CourseType type;
     private Long mediaId;
 
     @ManyToOne(cascade = CascadeType.PERSIST)

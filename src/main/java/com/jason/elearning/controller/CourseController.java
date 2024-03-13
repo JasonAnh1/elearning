@@ -1,10 +1,12 @@
 package com.jason.elearning.controller;
 
 import com.jason.elearning.configuration.Translator;
-import com.jason.elearning.entity.*;
+import com.jason.elearning.entity.Course;
+import com.jason.elearning.entity.CourseCategory;
+import com.jason.elearning.entity.CoursePart;
+import com.jason.elearning.entity.Lesson;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.response.BaseResponse;
-import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.service.course.CourseCategoryService;
 import com.jason.elearning.service.course.CoursePartService;
 import com.jason.elearning.service.course.CourseService;
@@ -114,7 +116,7 @@ public class CourseController extends BaseController{
                                            @RequestParam(required = false) Long authorId) {
         try {
 
-            return ResponseEntity.ok( courseService.listCourse(page, categoryId, title, authorId));
+            return ResponseEntity.ok(new BaseResponse("Success", courseService.listCourse(page, categoryId, title, authorId),courseService.countListCourse(categoryId, title, authorId)) );
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
