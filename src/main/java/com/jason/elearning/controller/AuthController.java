@@ -42,4 +42,32 @@ public class AuthController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @PostMapping("v1/auth/signupaslecture")
+    public ResponseEntity<?> signupaslecture(@Valid @RequestBody final User request) {
+        try {
+            if(request == null
+                    || request.getPhone() == null
+                    || request.getPassword() == null
+                    || request.getEmail() == null
+                    || request.getName() == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+//            return ResponseEntity.badRequest().body(new BaseResponse("Tính năng này đang tạm khoá", null));
+            return ResponseEntity.ok(new BaseResponse(Translator.toLocale("register_success"), userService.signupaslecture(request)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/verify/lecture")
+    public ResponseEntity<?> verifyLecture(@RequestParam Long id) {
+        try {
+            if(id == 0) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+//            return ResponseEntity.badRequest().body(new BaseResponse("Tính năng này đang tạm khoá", null));
+            return ResponseEntity.ok(new BaseResponse(Translator.toLocale("register_success"), userService.verifyLecture(id)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

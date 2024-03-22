@@ -2,8 +2,7 @@ package com.jason.elearning.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.jason.elearning.entity.constants.RoleName;
-import lombok.Getter;
-import lombok.Setter;
+import com.jason.elearning.entity.constants.UserActive;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -50,7 +49,7 @@ public class User extends DateAudit{
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-
+    private UserActive active;
 
     @Transient
     private String accessToken;
@@ -62,7 +61,13 @@ public class User extends DateAudit{
     @Transient
     private RoleName roleName;
 
+    public UserActive getActive() {
+        return active;
+    }
 
+    public void setActive(UserActive active) {
+        this.active = active;
+    }
 
     public long getId() {
         return id;

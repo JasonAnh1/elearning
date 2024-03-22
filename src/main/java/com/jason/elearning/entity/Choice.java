@@ -18,7 +18,7 @@ public class Choice extends DateAudit{
     private long quizzId;
     private String content;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "quizzId", referencedColumnName = "id", insertable = false, updatable = false)
     @JsonIgnore
     private Quizz quizz;

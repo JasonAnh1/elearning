@@ -7,6 +7,7 @@ import com.jason.elearning.entity.Role;
 import com.jason.elearning.entity.User;
 import com.jason.elearning.entity.constants.EnrollStatus;
 import com.jason.elearning.entity.constants.RoleName;
+import com.jason.elearning.entity.constants.UserActive;
 import com.jason.elearning.entity.request.EnrollRequest;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.repository.user.RoleRepository;
@@ -97,6 +98,27 @@ class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    public User signupaslecture(User request) throws Exception {
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new Exception(Translator.toLocale("phone_exists"));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new Exception(Translator.toLocale("email_exists"));
+        }
+
+        request.setActive(UserActive.UNVERIFY);
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        Role userRole = roleRepository.findByName(RoleName.ROLE_LECTURE).orElseThrow(() -> new RuntimeException("User Role not set."));
+        request.setRoles(Collections.singleton(userRole));
+        User result = userRepository.save(request);
+//        sendNotification(result);
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(result.getPhone());
+        String jwt = tokenProvider.generateTokenByUser((UserPrincipal) userDetails);
+        result.setAccessToken(jwt);
+        return result;
+    }
+
+    @Override
     public User getUserInfo(Long userId) throws Exception {
         User me = getUser();
         if (userId == null || me.getId() == userId) {
@@ -133,6 +155,13 @@ class UserServiceImpl extends BaseService implements UserService {
             enrollList.add(e);
         }
         return  enrollRepository.saveAll(enrollList);
+    }
+
+    @Override
+    public User verifyLecture(long id) throws Exception {
+            User user = userRepository.findById(id).orElseThrow(() -> new Exception("Không tìm thấy người dùng"));
+        user.setActive(UserActive.VERIFY);
+        return user;
     }
 
     @Override

@@ -23,6 +23,7 @@ public class Quizz extends DateAudit {
     private String answer;
     private QuizzType type;
     private long lessonId;
+
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "lessonId", referencedColumnName = "id", insertable = false, updatable = false)
     @JsonIgnore

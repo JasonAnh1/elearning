@@ -3,6 +3,7 @@ package com.jason.elearning.repository.course;
 import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.QCourse;
 import com.jason.elearning.entity.QEnroll;
+import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
 import lombok.var;
@@ -14,19 +15,32 @@ import static com.jason.elearning.util.Util.PAGE_SIZE;
 
 public class CourseRepositoryImpl extends BaseRepository implements CourseRepositoryCustom{
     @Override
-    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId) {
+    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
         QCourse qCourse = QCourse.course;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qCourse.deleted.eq(false));
+        if(authorId != 0){
+            builder.and(qCourse.authorId.eq(authorId));
+        }
         if(StringUtils.isNotBlank(title)){
             builder.and(qCourse.title.like("%"+ title + "%"));
         }
-        if(categoryId != null){
+        if(categoryId != 0){
             builder.and(qCourse.categoryId.eq(categoryId));
         }
-        if(authorId != null){
-            builder.and(qCourse.authorId.eq(authorId));
+        if(status != null){
+            builder.and(qCourse.status.eq(status));
         }
+        if (StringUtils.isNotEmpty(authorName)){
+            builder.and(qCourse.author.name.like("%"+ authorName + "%"));
+        }
+        if(startPrice != 0){
+            builder.and(qCourse.priceSale.goe(startPrice));
+        }
+        if (endPrice != 0){
+            builder.and(qCourse.priceSale.lt(endPrice));
+        }
+
         var a= query().from(qCourse)
                 .where(builder)
                 .select(qCourse)
@@ -50,17 +64,29 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
     }
 
     @Override
-    public Long countGetCourse(String title, Long categoryId, Long authorId) {
+    public Long countGetCourse(String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
         QCourse qCourse = QCourse.course;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qCourse.deleted.eq(false));
         if(StringUtils.isNotBlank(title)){
             builder.and(qCourse.title.like("%"+ title + "%"));
         }
-        if(categoryId != null){
+        if(categoryId != 0){
             builder.and(qCourse.categoryId.eq(categoryId));
         }
-        if(authorId != null){
+        if(status != null){
+            builder.and(qCourse.status.eq(status));
+        }
+        if (StringUtils.isNotEmpty(authorName)){
+            builder.and(qCourse.author.name.like("%"+ authorName + "%"));
+        }
+        if(startPrice != 0){
+            builder.and(qCourse.priceSale.goe(startPrice));
+        }
+        if (endPrice != 0){
+            builder.and(qCourse.priceSale.lt(endPrice));
+        }
+        if(authorId != 0){
             builder.and(qCourse.authorId.eq(authorId));
         }
 

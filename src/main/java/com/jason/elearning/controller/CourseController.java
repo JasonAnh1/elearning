@@ -5,7 +5,9 @@ import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.CourseCategory;
 import com.jason.elearning.entity.CoursePart;
 import com.jason.elearning.entity.Lesson;
+import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.request.QuizzesRequest;
+import com.jason.elearning.entity.request.WrappUpdateQuizzLesson;
 import com.jason.elearning.entity.response.BaseResponse;
 import com.jason.elearning.service.course.CourseCategoryService;
 import com.jason.elearning.service.course.CoursePartService;
@@ -69,8 +71,29 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
-
-
+    @PostMapping("v1/update-course")
+    public ResponseEntity updateLesson(@Valid @RequestBody final Course request) {
+        try {
+            if(request == null || request.getId() ==0
+            ){
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( courseService.updateCourse(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @PostMapping("v1/update-section")
+    public ResponseEntity<?> updateCourseSection(@Valid @RequestBody final CoursePart request) {
+        try {
+            if(request == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( coursePartService.updateSection(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
     @PostMapping("v1/create-course-section")
     public ResponseEntity<?> createCourseSection(@Valid @RequestBody final CoursePart request) {
         try {
@@ -113,10 +136,14 @@ public class CourseController extends BaseController{
     public ResponseEntity<?> listAllCourse(@RequestParam final int page,
                                            @RequestParam(required = false) String title,
                                            @RequestParam(required = false) Long categoryId,
-                                           @RequestParam(required = false) Long authorId) {
+                                           @RequestParam(required = false) Long authorId,
+                                           @RequestParam(required = false) String authorName,
+                                           @RequestParam(required = false)CourseStatus status,
+                                           @RequestParam(required = false) Long startPrice,
+                                           @RequestParam(required = false) Long endPrice) {
         try {
 
-            return ResponseEntity.ok(new BaseResponse("Success", courseService.listCourse(page, categoryId, title, authorId),courseService.countListCourse(categoryId, title, authorId)) );
+            return ResponseEntity.ok(new BaseResponse("Success", courseService.listCourse(page, categoryId, title, authorId,authorName,status,startPrice,endPrice),courseService.countListCourse(categoryId, title, authorId,authorName,status,startPrice,endPrice)) );
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
@@ -157,6 +184,18 @@ public class CourseController extends BaseController{
                 throw new Exception(Translator.toLocale("required_fields"));
             }
             return ResponseEntity.ok( categoryService.updateCourseCategory(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+
+    @PostMapping("v1/update-quizzes")
+    public ResponseEntity<?> updateQuizzes(@RequestBody  WrappUpdateQuizzLesson request) {
+        try {
+            if(request == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( coursePartService.updateQuizzes(request.getQuestions()));
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }

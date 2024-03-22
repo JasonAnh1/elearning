@@ -14,12 +14,15 @@ public interface UserService {
 
     User signup(User request) throws Exception;
 
+    User signupaslecture(User user) throws Exception;
+
     User getUserInfo(Long userId) throws Exception;
 
     User updateProfile(User request) throws Exception;
 
     List<Enroll> enrollACourse(EnrollRequest request) throws Exception;
 
+    User verifyLecture(long id) throws Exception;
 
     /////////////////////Admin///////////
     User adminAddUser(User request) throws Exception;
