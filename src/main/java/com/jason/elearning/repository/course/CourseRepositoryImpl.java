@@ -1,6 +1,7 @@
 package com.jason.elearning.repository.course;
 
 import com.jason.elearning.entity.Course;
+import com.jason.elearning.entity.Enroll;
 import com.jason.elearning.entity.QCourse;
 import com.jason.elearning.entity.QEnroll;
 import com.jason.elearning.entity.constants.CourseStatus;
@@ -9,13 +10,14 @@ import com.querydsl.core.BooleanBuilder;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.jason.elearning.util.Util.PAGE_SIZE;
 
 public class CourseRepositoryImpl extends BaseRepository implements CourseRepositoryCustom{
     @Override
-    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
+    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, Long userId) {
         QCourse qCourse = QCourse.course;
         QEnroll qEnroll = QEnroll.enroll;
         BooleanBuilder builder = new BooleanBuilder();
@@ -42,14 +44,18 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
             builder.and(qCourse.priceSale.lt(endPrice));
         }
 
+        List<Enroll> enrollments = query()
+                .select(qEnroll)
+                .from(qEnroll)
+                .where(qEnroll.userId.eq(userId))
+                .fetch();
 
-
-        List<Course> courseList = query().from(qCourse)
+        return query().from(qCourse)
                 .leftJoin(qEnroll).on(qCourse.id.eq(qEnroll.courseId))
                 .where(builder)
                 .groupBy(qCourse.id)
                 .select(qCourse, qEnroll.count())
-                .offset(page * PAGE_SIZE)
+                .offset((long) page * PAGE_SIZE)
                 .limit(PAGE_SIZE)
                 .orderBy(qCourse.id.desc())
                 .fetch()
@@ -57,13 +63,13 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .map(tuple -> {
                     Course course = tuple.get(qCourse);
                     Long learnerNumber = tuple.get(qEnroll.count());
-                    course.setLearnerNumber(learnerNumber);
-
+                    Objects.requireNonNull(course).setLearnerNumber(learnerNumber);
+                    course.setIsEnrolled(
+                            enrollments.stream().anyMatch(e -> e.getCourseId() == course.getId())
+                    );
                     return course;
                 })
                 .collect(Collectors.toList());
-                ;
-        return courseList;
     }
 
     @Override
