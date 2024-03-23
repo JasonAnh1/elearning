@@ -42,6 +42,11 @@ public class Course extends DateAudit{
     private CourseStatus status;
     private CourseType type;
     private Long mediaId;
+    @Transient
+    private Long learnerNumber;
+    @Transient
+    private Boolean isEnrolled;
+
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
