@@ -6,10 +6,10 @@ import com.jason.elearning.entity.QEnroll;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
-import lombok.var;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.jason.elearning.util.Util.PAGE_SIZE;
 
@@ -17,6 +17,7 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
     @Override
     public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
         QCourse qCourse = QCourse.course;
+        QEnroll qEnroll = QEnroll.enroll;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qCourse.deleted.eq(false));
         if(authorId != 0){
@@ -41,13 +42,28 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
             builder.and(qCourse.priceSale.lt(endPrice));
         }
 
-        var a= query().from(qCourse)
+
+
+        List<Course> courseList = query().from(qCourse)
+                .leftJoin(qEnroll).on(qCourse.id.eq(qEnroll.courseId))
                 .where(builder)
-                .select(qCourse)
+                .groupBy(qCourse.id)
+                .select(qCourse, qEnroll.count())
                 .offset(page * PAGE_SIZE)
                 .limit(PAGE_SIZE)
-                .orderBy(qCourse.id.desc());
-        return a.fetch();
+                .orderBy(qCourse.id.desc())
+                .fetch()
+                .stream()
+                .map(tuple -> {
+                    Course course = tuple.get(qCourse);
+                    Long learnerNumber = tuple.get(qEnroll.count());
+                    course.setLearnerNumber(learnerNumber);
+
+                    return course;
+                })
+                .collect(Collectors.toList());
+                ;
+        return courseList;
     }
 
     @Override
