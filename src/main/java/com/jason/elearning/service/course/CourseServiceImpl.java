@@ -38,8 +38,7 @@ public class CourseServiceImpl extends BaseService implements CourseService{
 
         User user = getUser();
 
-
-        return courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice);
+        return courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice, user == null ? -1 : user.getId());
     }
 
     @Override

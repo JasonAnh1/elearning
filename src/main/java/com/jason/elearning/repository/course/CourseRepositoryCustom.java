@@ -6,7 +6,7 @@ import com.jason.elearning.entity.constants.CourseStatus;
 import java.util.List;
 
 public interface CourseRepositoryCustom {
-    List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice);
+    List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, Long userId);
     Long getEnrollNumber(Long courseId,Long learnerId);
     Long countGetCourse( String title,Long categoryId,Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice);
 }
