@@ -55,4 +55,31 @@ public class TransactionController {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/revenue/month")
+    public ResponseEntity<?> revenueByMonth(@RequestParam int year,@RequestParam int month) {
+        try {
+
+            return ResponseEntity.ok( transactionService.getTotalAmountPerDay(year,month));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/revenue/grossProfit")
+    public ResponseEntity<?> revenueGrossProfit(@RequestParam int year) {
+        try {
+
+            return ResponseEntity.ok( transactionService.revenueGrossProfit(year));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/revenue/netProfit")
+    public ResponseEntity<?> revenueNetProfit(@RequestParam int year) {
+        try {
+
+            return ResponseEntity.ok( transactionService.revenueNetProfit(year));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

@@ -22,9 +22,9 @@ public class Transaction extends DateAudit{
     private long id;
     private long amount;
     private String description;
-    private long sender_id;
+    private Long sender_id;
+    private Long receiver_id;
     private String receiver;
-    private String remiters;
     private TransactionStatus status;
     private TransactionType type;
     private String transCode;

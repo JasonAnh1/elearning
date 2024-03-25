@@ -62,7 +62,7 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                     return course;
                 })
                 .collect(Collectors.toList());
-                ;
+
         return courseList;
     }
 
