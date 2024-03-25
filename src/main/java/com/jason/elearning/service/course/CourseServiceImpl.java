@@ -29,12 +29,14 @@ public class CourseServiceImpl extends BaseService implements CourseService{
             throw new Exception(Translator.toLocale("access_denied"));
         }
         course.setAuthorId(user.getId());
+        course.setStatus(CourseStatus.PENDING);
         return courseRepository.save(course);
     }
 
     @Override
-    public List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception{
+    public  List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception{
 
+        User user = getUser();
 
 
         return courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice);

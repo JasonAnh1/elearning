@@ -3,6 +3,7 @@ package com.jason.elearning.service.transaction;
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Transaction;
 import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.entity.constants.TransactionStatus;
 import com.jason.elearning.entity.constants.TransactionType;
 import com.jason.elearning.entity.constants.UserActive;
@@ -37,6 +38,19 @@ public class TransactionServiceImpl extends BaseService implements TransactionSe
     }
 
     @Override
+    public List<Map<String, Object>> getTotalAmountPerDay(int year, int month) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        if (user.getRoles().get(0).getName() != RoleName.ROLE_ADMIN) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        return transactionRepository.getTotalAmountPerDay(year,month);
+    }
+
+    @Override
     public User saveVerify(VerifyRequest request) throws Exception {
         User user = getUser();
         if (user ==null) {
@@ -56,5 +70,31 @@ public class TransactionServiceImpl extends BaseService implements TransactionSe
         String jwt = tokenProvider.generateTokenByUser((UserPrincipal) userDetails);
         result.setAccessToken(jwt);
         return result;
+    }
+
+    @Override
+    public Long revenueGrossProfit(int year) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        if (user.getRoles().get(0).getName() != RoleName.ROLE_ADMIN) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        return transactionRepository.getTotalProfitByYear(year);
+    }
+
+    @Override
+    public Long revenueNetProfit(int year) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        if (user.getRoles().get(0).getName() != RoleName.ROLE_ADMIN) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        return transactionRepository.calculateNetProfitByYear(year);
     }
 }

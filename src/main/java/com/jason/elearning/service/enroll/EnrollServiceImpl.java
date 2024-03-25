@@ -38,7 +38,7 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
         trans.setStatus(TransactionStatus.SUCCESS);
         trans.setSender_id(user.getId());
         trans.setReceiver("SYSTEM");
-        trans.setRemiters(user.getName());
+
 
         List<ItemOrder> items = request.getItems();
 
