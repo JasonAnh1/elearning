@@ -1,13 +1,12 @@
 package com.jason.elearning.service.course;
 
-import com.jason.elearning.entity.Choice;
-import com.jason.elearning.entity.CoursePart;
-import com.jason.elearning.entity.Lesson;
-import com.jason.elearning.entity.Quizz;
+import com.jason.elearning.entity.*;
+import com.jason.elearning.entity.constants.LessonType;
 import com.jason.elearning.entity.constants.QuizzType;
 import com.jason.elearning.entity.request.QuizzRequest;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.request.UpdateQuestionRequest;
+import com.jason.elearning.repository.ImageRepository;
 import com.jason.elearning.repository.course.ChoiceRepository;
 import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.LessonRepository;
@@ -17,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,7 +33,8 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
     private QuizzRepository quizzRepository;
     @Autowired
     private ChoiceRepository choiceRepository;
-
+    @Autowired
+    private ImageRepository imageRepository;
 
     @Override
     public CoursePart addSection(CoursePart coursePart) {
@@ -232,5 +233,54 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         return new ArrayList<>();
     }
 
+    @Override
+    public Lesson updateLesson(Lesson request) throws Exception {
+        Lesson updateLesson = lessonRepository.findById(request.getId()).orElseThrow(() -> new Exception("can not find section"));
+        long deletedMediaId = 0;
+
+        if(request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.VIDEO)
+        {
+            if(request.getMediaId() != null && request.getMediaId() != 0){
+                deleteOldVideoAndThumbnail(updateLesson.getMedia());
+                long lessonMediaId = updateLesson.getMediaId();
+                updateLesson.setMediaId(request.getMediaId());
+                deletedMediaId = lessonMediaId;
+
+            }
+        }else  if(request.getType() == LessonType.TEXT && updateLesson.getType() == LessonType.VIDEO){
+            deleteOldVideoAndThumbnail(updateLesson.getMedia());
+            long lessonMediaId = updateLesson.getMediaId();
+            updateLesson.setMediaId(null);
+            deletedMediaId = lessonMediaId;
+
+        }else if(request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.TEXT){
+            updateLesson.setMediaId(request.getMediaId());
+
+        }
+
+        updateLesson.setContent(request.getContent());
+        updateLesson.setTitle(request.getTitle());
+        updateLesson.setPassThreshold(request.getPassThreshold());
+        updateLesson.setType(request.getType());
+
+        lessonRepository.save(updateLesson);
+        if(deletedMediaId!=0) {
+            imageRepository.deleteById(deletedMediaId);
+        }
+        return null;
+    }
+    private void deleteOldVideoAndThumbnail(UploadFile uploadFile) {
+        // Xóa tệp video cũ
+        File oldVideoFile = new File(uploadFile.getOriginUrl());
+        if (oldVideoFile.exists()) {
+            oldVideoFile.delete();
+        }
+
+        // Xóa hình ảnh minh họa cũ
+        File oldThumbnailFile = new File(uploadFile.getThumbUrl());
+        if (oldThumbnailFile.exists()) {
+            oldThumbnailFile.delete();
+        }
+    }
 
 }

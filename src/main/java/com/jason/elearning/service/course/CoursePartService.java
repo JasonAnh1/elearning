@@ -17,5 +17,6 @@ public interface CoursePartService {
     List<Quizz> addQuizzes(QuizzesRequest request);
     List<Quizz> listQuizzes(Long lessonId);
     List<Quizz> updateQuizzes(List<UpdateQuestionRequest> requests) throws Exception;
+    Lesson updateLesson(Lesson lesson) throws Exception;
 }
 

@@ -3,11 +3,13 @@ package com.jason.elearning.service.course;
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.CourseCategory;
+import com.jason.elearning.entity.Enroll;
 import com.jason.elearning.entity.User;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.repository.course.CourseCategoryRepository;
 import com.jason.elearning.repository.course.CourseRepository;
+import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,8 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     private CourseRepository courseRepository;
     @Autowired
     private CourseCategoryRepository courseCategoryRepository;
-
+    @Autowired
+    private EnrollRepository enrollRepository;
     @Override
     public Course creatCourse(Course course) throws Exception {
         User user = getUser();
@@ -48,7 +51,14 @@ public class CourseServiceImpl extends BaseService implements CourseService{
 
     @Override
     public Course getCourseById(Long courseId) throws Exception {
-        return courseRepository.findById(courseId).orElseThrow(()-> new Exception("can not find course"));
+        User user = getUser();
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(()-> new Exception("can not find course"));
+        if(user!= null){
+            Enroll enroll = enrollRepository.findFirstByUserIdAndCourseId(user.getId(),courseId);
+            course.setIsEnrolled(enroll != null);
+        }
+        return course;
     }
 
     @Override
