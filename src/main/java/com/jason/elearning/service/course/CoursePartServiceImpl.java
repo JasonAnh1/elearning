@@ -56,6 +56,7 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         List<CoursePart> lstSections = coursePartRepository.getAllCourseSession(courseId);
         for (CoursePart cp : lstSections) {
             List<Lesson> ls = lessonRepository.listLessonOrderByDateCreate(cp.getId());
+
             if (ls != null) {
                 cp.setLessons(ls);
             }

@@ -1,14 +1,14 @@
 package com.jason.elearning.service.enroll;
 
 import com.jason.elearning.configuration.Translator;
-import com.jason.elearning.entity.Enroll;
-import com.jason.elearning.entity.Transaction;
-import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.EnrollStatus;
 import com.jason.elearning.entity.constants.TransactionStatus;
 import com.jason.elearning.entity.constants.TransactionType;
 import com.jason.elearning.entity.request.ItemOrder;
 import com.jason.elearning.entity.request.PlaceOrderRequest;
+import com.jason.elearning.repository.course.LessonRepository;
+import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.repository.transaction.TransactionRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
@@ -24,6 +24,10 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
     private EnrollRepository enrollRepository;
     @Autowired
     private TransactionRepository transactionRepository;
+    @Autowired
+    private LessonProgressRepository lessonProgressRepository;
+    @Autowired
+    private LessonRepository lessonRepository;
     @Override
     public List<Enroll> placeOrder(PlaceOrderRequest request) throws Exception {
         Transaction trans = new Transaction();
@@ -58,5 +62,47 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
 
         transactionRepository.save(trans);
         return enrollRepository.findByUserId(user.getId());
+    }
+
+    @Override
+    public void updateVideoProgress(double progress,long lessonId) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        LessonProgress lessonProgress = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(),lessonId);
+
+        if(lessonProgress == null){
+            LessonProgress lessonProgress1 = new LessonProgress();
+            lessonProgress1.setVideoProgress(progress);
+            lessonProgress1.setUserId(user.getId());
+            lessonProgress1.setLessonId(lessonId);
+            lessonProgress1.setProgress(0.0);
+            lessonProgressRepository.save(lessonProgress1);
+        }else {
+            Lesson lesson = lessonProgress.getLesson();
+            if (lesson.getPassThreshold() == 0 && progress == 100) {
+                lessonProgress.setProgress(100.0);
+            }
+            lessonProgress.setVideoProgress(progress);
+            lessonProgressRepository.save(lessonProgress);
+        }
+
+    }
+
+    @Override
+    public double loadVideoProgress(long lessonId) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        LessonProgress lessonProgress = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(),lessonId);
+        if(lessonProgress == null){
+            return 0;
+        }else {
+            return lessonProgress.getVideoProgress();
+        }
+
     }
 }

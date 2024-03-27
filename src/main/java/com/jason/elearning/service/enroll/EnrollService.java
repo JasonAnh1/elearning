@@ -7,5 +7,6 @@ import java.util.List;
 
 public interface EnrollService {
     List<Enroll> placeOrder(PlaceOrderRequest request) throws Exception;
-
+    void updateVideoProgress(double progress,long lessonId) throws Exception;
+    double loadVideoProgress(long lessonId) throws Exception;
 }

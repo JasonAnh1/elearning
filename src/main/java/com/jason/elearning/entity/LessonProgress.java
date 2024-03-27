@@ -21,6 +21,7 @@ public class LessonProgress extends DateAudit {
     private Long userId;
     private Long lessonId;
     private Double progress;
+    private Double videoProgress;
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "userId", referencedColumnName = "id", insertable = false, updatable = false)
     private User learner;
