@@ -29,4 +29,5 @@ public class LessonProgress extends DateAudit {
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "lessonId", referencedColumnName = "id", insertable = false, updatable = false)
     private Lesson lesson;
+    private Boolean locked;
 }

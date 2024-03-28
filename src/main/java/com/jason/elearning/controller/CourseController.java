@@ -157,6 +157,15 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/list-learning-lesson")
+        public ResponseEntity<?> listLearningLesson(@RequestParam final long courseId) {
+        try {
+
+            return ResponseEntity.ok( coursePartService.listLearningLesson(courseId));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
     @PostMapping("v1/create-course-category")
     public ResponseEntity<?> createCourseCategory(@Valid @RequestBody final CourseCategory request) {
         try {

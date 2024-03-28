@@ -5,7 +5,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "course_part")
@@ -25,6 +24,7 @@ public class CoursePart extends DateAudit{
 //    private Course course;
 
     @OneToMany(mappedBy = "part",fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OrderBy("position")
     private List<Lesson> lessons;
 
 

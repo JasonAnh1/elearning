@@ -1,5 +1,6 @@
 package com.jason.elearning.service.course;
 
+import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.LessonType;
 import com.jason.elearning.entity.constants.QuizzType;
@@ -53,16 +54,9 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
 
     @Override
     public List<CoursePart> listCourseSession(long courseId) {
-        List<CoursePart> lstSections = coursePartRepository.getAllCourseSession(courseId);
-        for (CoursePart cp : lstSections) {
-            List<Lesson> ls = lessonRepository.listLessonOrderByDateCreate(cp.getId());
 
-            if (ls != null) {
-                cp.setLessons(ls);
-            }
-        }
 
-        return lstSections;
+        return coursePartRepository.getAllCourseSession(courseId);
     }
 
     @Override
@@ -270,6 +264,39 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         }
         return null;
     }
+
+    @Override
+    public List<CoursePart> listLearningLesson(long id) throws Exception {
+
+        User user = getUser();
+        if (user == null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+
+        List<CoursePart> lstSections = coursePartRepository.getAllCourseSession(id);
+        List<Long> lessonIds = lstSections.stream()
+                .map(e -> e.getLessons().stream().map(Lesson::getId).collect(Collectors.toList()))
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        List<LessonProgress> lessonProgresses = lessonRepository.listLearningLessonProgress(user.getId(), lessonIds);
+
+        lstSections.forEach(e -> e.getLessons().forEach(i -> {
+            try {
+                LessonProgress lessonProgress = lessonProgresses.stream()
+                        .filter(j -> j.getLessonId() == i.getId())
+                        .findFirst()
+                        .orElseThrow(() -> new Exception("can not find lesson"));
+                i.setLock(lessonProgress.getLocked());
+            } catch (Exception exception) {
+                exception.printStackTrace();
+            }
+        }));
+
+        return lstSections;
+    }
+
     private void deleteOldVideoAndThumbnail(UploadFile uploadFile) {
         // Xóa tệp video cũ
         File oldVideoFile = new File(uploadFile.getOriginUrl());

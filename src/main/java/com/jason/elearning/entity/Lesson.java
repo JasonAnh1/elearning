@@ -27,10 +27,13 @@ public class Lesson extends DateAudit {
     @JoinColumn(name = "coursePartId", referencedColumnName = "id", insertable = false, updatable = false)
     @JsonIgnore
     private CoursePart part;
+    private int position;
     private Long mediaId;
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
     private UploadFile media;
+    @Transient
+    private boolean isLock;
 
 
 }

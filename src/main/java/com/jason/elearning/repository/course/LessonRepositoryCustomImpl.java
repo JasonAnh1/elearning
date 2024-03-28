@@ -1,7 +1,9 @@
 package com.jason.elearning.repository.course;
 
 import com.jason.elearning.entity.Lesson;
+import com.jason.elearning.entity.LessonProgress;
 import com.jason.elearning.entity.QLesson;
+import com.jason.elearning.entity.QLessonProgress;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
 
@@ -20,6 +22,19 @@ public class LessonRepositoryCustomImpl extends BaseRepository implements Lesson
                 .where(builder)
                 .select(qLesson)
                 .orderBy(qLesson.id.asc())
+                .fetch();
+    }
+
+    @Override
+    public List<LessonProgress> listLearningLessonProgress(Long userId, List<Long> lessonIds) {
+        QLessonProgress qLessonProgress = QLessonProgress.lessonProgress;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qLessonProgress.userId.eq(userId));
+        builder.and(qLessonProgress.lessonId.in(lessonIds));
+
+        return  query().from(qLessonProgress)
+                .where(builder)
+                .select(qLessonProgress)
                 .fetch();
     }
 }
