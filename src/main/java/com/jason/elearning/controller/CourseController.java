@@ -148,7 +148,7 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
-    @GetMapping("v1/publish/list-course-section")
+        @GetMapping("v1/publish/list-course-section")
     public ResponseEntity<?> listAllCourse(@RequestParam final long courseId) {
         try {
 

@@ -4,6 +4,7 @@ import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.LessonType;
 import com.jason.elearning.entity.constants.QuizzType;
+import com.jason.elearning.entity.request.AnswerSheetRequest;
 import com.jason.elearning.entity.request.QuizzRequest;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.request.UpdateQuestionRequest;
@@ -12,6 +13,7 @@ import com.jason.elearning.repository.course.ChoiceRepository;
 import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.LessonRepository;
 import com.jason.elearning.repository.course.QuizzRepository;
+import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,8 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
     private ChoiceRepository choiceRepository;
     @Autowired
     private ImageRepository imageRepository;
+    @Autowired
+    private LessonProgressRepository lessonProgressRepository;
 
     @Override
     public CoursePart addSection(CoursePart coursePart) {
@@ -66,7 +70,12 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
 
     @Override
     public Lesson getLessonById(long id) throws Exception {
-        return lessonRepository.findById(id).orElseThrow(() -> new Exception("can not find lesson"));
+        Lesson lesson =  lessonRepository.findById(id).orElseThrow(() -> new Exception("can not find lesson"));
+
+        if(quizzRepository.existsByLessonId(lesson.getId())){
+            lesson.setHaveTest(true);
+        }
+        return lesson;
     }
 
     @Override
@@ -295,6 +304,81 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         }));
 
         return lstSections;
+    }
+
+    @Override
+    public String checkAnswer(AnswerSheetRequest request) throws Exception {
+        User user = getUser();
+        if (user == null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        List<Quizz> lstQuizzes = quizzRepository.findAllByLessonId(request.getLessonId());
+        Lesson lesson =  lessonRepository.findById(request.getLessonId())
+                .orElseThrow(() -> new Exception("can not find lesson"));
+        int passThreshold = lesson.getPassThreshold();
+        if (lstQuizzes == null) {
+            throw (new Exception("can not find lesson"));
+        }
+        int correctCount = (int) request.answers.stream().filter(
+                e -> lstQuizzes.stream().anyMatch(
+                        i -> i.getId() == e.getId() && i.getAnswer().trim().equals(e.getAnswer().trim())
+                )
+        )
+                .distinct().count();
+        if (correctCount >= passThreshold) {
+            Lesson lessonUnlock = lessonRepository
+                    .findFirstByPart_IdAndPosition(lesson.getCoursePartId(), lesson.getPosition() + 1)
+                    .orElseGet(() -> {
+                        CoursePart currentPart = lesson.getPart();
+                        CoursePart nextCoursePart = coursePartRepository
+                                .findFirstByCourseIdAndPartNumber(currentPart.getCourseId(), currentPart.getPartNumber() + 1)
+                                .orElse(null);
+                        return nextCoursePart == null
+                                ? null
+                                : nextCoursePart.getLessons().stream().findFirst().orElse(null);
+                    });
+            if (lessonUnlock != null){
+                LessonProgress lessonProgress = lessonProgressRepository
+                        .findFirstByUserIdAndLessonId(user.getId(), lessonUnlock.getId());
+                lessonProgress.setLocked(false);
+                lessonProgressRepository.save(lessonProgress);
+            }
+
+            return "PASS";
+        }
+
+        return "FAILED";
+    }
+
+    @Override
+    public String unlockLesson(long lessonId) throws Exception {
+        User user = getUser();
+        if (user == null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        Lesson lesson =  lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new Exception("can not find lesson"));
+        Lesson lessonUnlock = lessonRepository
+                .findFirstByPart_IdAndPosition(lesson.getCoursePartId(), lesson.getPosition() + 1)
+                .orElseGet(() -> {
+                    CoursePart currentPart = lesson.getPart();
+                    CoursePart nextCoursePart = coursePartRepository
+                            .findFirstByCourseIdAndPartNumber(currentPart.getCourseId(), currentPart.getPartNumber() + 1)
+                            .orElse(null);
+                    return nextCoursePart == null
+                            ? null
+                            : nextCoursePart.getLessons().stream().findFirst().orElse(null);
+                });
+        if (lessonUnlock != null){
+            LessonProgress lessonProgress = lessonProgressRepository
+                    .findFirstByUserIdAndLessonId(user.getId(), lessonUnlock.getId());
+            lessonProgress.setLocked(false);
+            lessonProgressRepository.save(lessonProgress);
+            return "SUCCESS";
+        }
+
+        return "FAILED";
     }
 
     private void deleteOldVideoAndThumbnail(UploadFile uploadFile) {

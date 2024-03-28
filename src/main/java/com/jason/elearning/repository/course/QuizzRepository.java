@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface QuizzRepository extends JpaRepository<Quizz,Long> {
     List<Quizz> findAllByLessonId(long lessonId);
+    boolean existsByLessonId(long lessonId);
 }

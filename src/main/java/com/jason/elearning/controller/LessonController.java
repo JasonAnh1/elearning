@@ -3,6 +3,7 @@ package com.jason.elearning.controller;
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Lesson;
 import com.jason.elearning.entity.LessonProgress;
+import com.jason.elearning.entity.request.AnswerSheetRequest;
 import com.jason.elearning.entity.response.BaseResponse;
 import com.jason.elearning.service.course.CoursePartService;
 import com.jason.elearning.service.enroll.EnrollService;
@@ -60,5 +61,28 @@ public class LessonController extends BaseController {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @PostMapping("v1/answer-quizzes")
+    public ResponseEntity<?> answerQuizzes(@Valid @RequestBody AnswerSheetRequest request) {
+        try {
+            if(request.getLessonId() == 0 ) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
 
+            return ResponseEntity.ok(coursePartService.checkAnswer(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+        @GetMapping("v1/unlock-lesson")
+    public ResponseEntity<?> unlockLesson(@Valid @RequestParam Long request) {
+        try {
+            if(request == 0 ) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+
+            return ResponseEntity.ok(coursePartService.unlockLesson(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }
