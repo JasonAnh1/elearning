@@ -119,6 +119,27 @@ class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    public User signUpAsLearner(User request) throws Exception {
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new Exception(Translator.toLocale("phone_exists"));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new Exception(Translator.toLocale("email_exists"));
+        }
+
+        request.setActive(UserActive.UNVERIFY);
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        Role userRole = roleRepository.findByName(RoleName.ROLE_LEARNER).orElseThrow(() -> new RuntimeException("User Role not set."));
+        request.setRoles(Collections.singleton(userRole));
+        User result = userRepository.save(request);
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(result.getPhone());
+        String jwt = tokenProvider.generateTokenByUser((UserPrincipal) userDetails);
+        result.setAccessToken(jwt);
+        return result;
+    }
+
+    @Override
     public User getUserInfo(Long userId) throws Exception {
         User me = getUser();
         if (userId == null || me.getId() == userId) {

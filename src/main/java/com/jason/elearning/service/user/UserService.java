@@ -16,6 +16,8 @@ public interface UserService {
 
     User signupaslecture(User user) throws Exception;
 
+    User signUpAsLearner(User user) throws Exception;
+
     User getUserInfo(Long userId) throws Exception;
 
     User updateProfile(User request) throws Exception;

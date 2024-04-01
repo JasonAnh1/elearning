@@ -1,5 +1,9 @@
 package com.jason.elearning.repository.transaction;
 
+import com.jason.elearning.entity.QTransaction;
+import com.jason.elearning.entity.constants.TransactionStatus;
+import com.jason.elearning.repository.BaseRepository;
+import com.querydsl.core.BooleanBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -9,7 +13,7 @@ import javax.persistence.StoredProcedureQuery;
 import java.util.List;
 import java.util.Map;
 
-public class TransactionRepositoryImpl implements TransactionRepositoryCustom{
+public class TransactionRepositoryImpl extends BaseRepository implements TransactionRepositoryCustom{
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -44,5 +48,25 @@ public class TransactionRepositoryImpl implements TransactionRepositoryCustom{
         Long netProfit = (Long) storedProcedure.getOutputParameterValue("net_profit");
 
         return netProfit;
+    }
+
+    @Override
+    public Long calculateLectureNetProfitByYear(int year, long lectureId) {
+
+        QTransaction qTransaction =  QTransaction.transaction;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        // Xác định các điều kiện cho query DSL
+        builder.and(qTransaction.receiver_id.eq(lectureId)
+                .and(qTransaction.status.eq(TransactionStatus.SUCCESS))
+                .and(qTransaction.createdAt.year().eq(year))); // Giả sử bạn có một method tên createdYear để trích xuất năm từ timestamp
+
+        // Thực hiện truy vấn và tính tổng số lượng
+        Long totalAmount = query().from(qTransaction)
+                .where(builder)
+                .select(qTransaction.amount.sum())
+                .fetchOne();
+
+        return totalAmount != null ? totalAmount : 0L;
     }
 }

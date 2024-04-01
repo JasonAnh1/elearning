@@ -12,4 +12,5 @@ public interface TransactionService {
      User saveVerify(VerifyRequest request) throws Exception;
      Long revenueGrossProfit(int year) throws Exception;
      Long revenueNetProfit(int year) throws Exception;
+     Long lectureRevenueNetProfit(int year) throws Exception;
 }

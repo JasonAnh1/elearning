@@ -32,10 +32,12 @@ public class Lesson extends DateAudit {
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
     private UploadFile media;
+    private boolean  isFree = false;
     @Transient
     private boolean isLock = true;
     @Transient
     private boolean isHaveTest = false;
+
 
 
 }

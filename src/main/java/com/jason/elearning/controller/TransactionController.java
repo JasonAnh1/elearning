@@ -82,4 +82,13 @@ public class TransactionController {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/lectures-revenue/netProfit")
+    public ResponseEntity<?> lectureRevenueNetProfit(@RequestParam int year) {
+        try {
+
+            return ResponseEntity.ok( transactionService.lectureRevenueNetProfit(year));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

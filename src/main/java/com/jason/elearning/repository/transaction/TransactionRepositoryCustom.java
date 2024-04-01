@@ -10,4 +10,6 @@ public interface TransactionRepositoryCustom {
     List<Map<String, Object>> getTotalAmountPerDay(int year,int month);
 
     Long calculateNetProfitByYear(int year);
+
+    Long calculateLectureNetProfitByYear(int year, long lectureId);
 }

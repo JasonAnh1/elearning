@@ -97,4 +97,14 @@ public class TransactionServiceImpl extends BaseService implements TransactionSe
 
         return transactionRepository.calculateNetProfitByYear(year);
     }
+
+    @Override
+    public Long lectureRevenueNetProfit(int year) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        return transactionRepository.calculateLectureNetProfitByYear(year, user.getId());
+    }
 }
