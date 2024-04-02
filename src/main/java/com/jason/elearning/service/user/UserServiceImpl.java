@@ -84,6 +84,9 @@ class UserServiceImpl extends BaseService implements UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception(Translator.toLocale("email_exists"));
         }
+        if (userRepository.existsByName(request.getName())) {
+            throw new Exception(Translator.toLocale("name_exists"));
+        }
 
 
         request.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -105,6 +108,9 @@ class UserServiceImpl extends BaseService implements UserService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception(Translator.toLocale("email_exists"));
         }
+        if (userRepository.existsByName(request.getName())) {
+            throw new Exception(Translator.toLocale("name_exists"));
+        }
 
         request.setActive(UserActive.UNVERIFY);
         request.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -125,6 +131,9 @@ class UserServiceImpl extends BaseService implements UserService {
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new Exception(Translator.toLocale("email_exists"));
+        }
+        if (userRepository.existsByName(request.getName())) {
+            throw new Exception(Translator.toLocale("name_exists"));
         }
 
         request.setActive(UserActive.UNVERIFY);
