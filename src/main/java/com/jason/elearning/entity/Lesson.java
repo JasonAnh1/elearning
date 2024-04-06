@@ -33,8 +33,11 @@ public class Lesson extends DateAudit {
     @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
     private UploadFile media;
     private boolean  isFree = false;
+
     @Transient
     private boolean isLock = true;
+    @Transient
+    private boolean isEnrolled = false;
     @Transient
     private boolean isHaveTest = false;
 

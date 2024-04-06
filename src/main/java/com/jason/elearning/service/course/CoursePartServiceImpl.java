@@ -9,11 +9,10 @@ import com.jason.elearning.entity.request.QuizzRequest;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.request.UpdateQuestionRequest;
 import com.jason.elearning.repository.ImageRepository;
-import com.jason.elearning.repository.course.ChoiceRepository;
-import com.jason.elearning.repository.course.CoursePartRepository;
-import com.jason.elearning.repository.course.LessonRepository;
-import com.jason.elearning.repository.course.QuizzRepository;
+import com.jason.elearning.repository.comment.LessonCommentRepository;
+import com.jason.elearning.repository.course.*;
 import com.jason.elearning.repository.enroll.LessonProgressRepository;
+import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,19 +39,71 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
     private ImageRepository imageRepository;
     @Autowired
     private LessonProgressRepository lessonProgressRepository;
+    @Autowired
+    private LessonCommentRepository lessonCommentRepository;
+    @Autowired
+    private EnrollRepository enrollRepository;
+    @Autowired
+    private CourseRepository courseRepository;
 
     @Override
     public CoursePart addSection(CoursePart coursePart) {
 
+        List<CoursePart> lstCoursePart = coursePartRepository.findAllByCourseIdOrderByPartNumber(coursePart.getCourseId());
+        if (lstCoursePart.size() == 0) {
+            coursePart.setPartNumber(1);
+        } else {
+            int maxPartNumber = lstCoursePart.get(lstCoursePart.size() - 1).getPartNumber();
+            if (coursePart.getPartNumber() - maxPartNumber > 1) {
+                coursePart.setPartNumber(maxPartNumber + 1);
+            } else {
+                for (CoursePart cp : lstCoursePart) {
+                    if (cp.getPartNumber() >= coursePart.getPartNumber()) {
+                        cp.setPartNumber(cp.getPartNumber() + 1);
+                    }
+                }
+                coursePartRepository.saveAll(lstCoursePart);
+            }
+
+        }
 
         return coursePartRepository.save(coursePart);
     }
 
     @Override
-    public CoursePart updateSection(CoursePart coursePart) throws Exception {
-        CoursePart cp = coursePartRepository.findById(coursePart.getId()).orElseThrow(() -> new Exception("can not find section"));
-        cp.setTitle(coursePart.getTitle());
-        cp.setPartNumber(coursePart.getPartNumber());
+    public CoursePart updateSection(CoursePart request) throws Exception {
+        CoursePart cp = coursePartRepository.findById(request.getId()).orElseThrow(() -> new Exception("can not find section"));
+        cp.setTitle(request.getTitle());
+
+        int requestPosition = request.getPartNumber();
+        int currentPosition = cp.getPartNumber();
+        if (requestPosition != currentPosition) {
+
+            List<CoursePart> lstCoursePart = coursePartRepository.findAllByCourseIdOrderByPartNumber(request.getCourseId());
+            int lastPosition = lstCoursePart.get(lstCoursePart.size() - 1).getPartNumber();
+
+            if (requestPosition < currentPosition) {
+                for (CoursePart coursePart : lstCoursePart) {
+                    if (coursePart.getPartNumber() >= requestPosition && coursePart.getPartNumber() < currentPosition) {
+                        coursePart.setPartNumber(coursePart.getPartNumber() + 1);
+                    }
+                }
+            } else {
+                for (CoursePart coursePart : lstCoursePart) {
+                    if (coursePart.getPartNumber() > currentPosition && coursePart.getPartNumber() <= requestPosition) {
+                        coursePart.setPartNumber(coursePart.getPartNumber() - 1);
+                    }
+                }
+            }
+
+            if (requestPosition > lastPosition) {
+                cp.setPartNumber(lastPosition);
+            } else {
+                cp.setPartNumber(requestPosition);
+            }
+
+        }
+
         return coursePartRepository.save(cp);
     }
 
@@ -64,15 +115,82 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
     }
 
     @Override
-    public Lesson addLesson(Lesson lesson) {
-        return lessonRepository.save(lesson);
+    public Lesson addLesson(Lesson lesson) throws Exception {
+        // lấy vị trí lesson mà người dùng muốn đặt lesson vào
+        int requestPosition = lesson.getPosition();
+        // lấy tất cả lesson trong course part đó
+        List<Lesson> lstLesson = lessonRepository.findAllByCoursePartIdOrderByPositionAsc(lesson.getCoursePartId());
+        // kiểm tra size
+        if (lstLesson.size() == 0) {
+            // set lesson mà người dùng muốn đặt về 1 nếu course part rỗng
+            lesson.setPosition(1);
+        } else {
+            // lấy vị trí cuối cùng của lesson trong course part
+            int lastPosition = lstLesson.get(lstLesson.size() - 1).getPosition();
+            // nếu vị trí mà người dùng muốn đặt lớn hơn 1 bước nhảy thì đặt về 1 bước nhảy sau vị trí cuối
+            if (requestPosition - lastPosition > 1) {
+                lesson.setPosition(lastPosition + 1);
+            } else {
+                // ngược lại dịch tất cả các vị trí sao cho vị trí người dùng muốn đặt hợp lệ
+                for (Lesson ls : lstLesson) {
+                    if (ls.getPosition() >= requestPosition) {
+                        ls.setPosition(ls.getPosition() + 1);
+                    }
+                }
+                lessonRepository.saveAll(lstLesson);
+            }
+
+        }
+
+        Lesson savedLesson = lessonRepository.save(lesson);
+        CoursePart coursePart = coursePartRepository.findById(lesson.getCoursePartId()).orElseThrow(() -> new Exception("can not find section"));
+        long courseId = coursePart.getCourseId();
+        List<Enroll> lstEnrolled = enrollRepository.findAllByCourseId(courseId);
+        List<Long> lstUserIdEnrolled = lstEnrolled.stream()
+                .map(Enroll::getUserId)
+                .collect(Collectors.toList());
+
+        lessonProgressRepository.saveAll(addLessonProgressOfNewLessonForUserEnrolled(lstUserIdEnrolled
+                , savedLesson.getId(), isFirstLessonOfACourse(savedLesson, courseId)));
+
+        return savedLesson;
     }
+
+    public boolean isFirstLessonOfACourse(Lesson lesson, long courseId) throws Exception {
+
+        List<CoursePart> lstCoursePart = coursePartRepository.findAllByCourseIdOrderByPartNumber(courseId);
+        if(lesson.getId() == lstCoursePart.get(0).getLessons().get(0).getId() == true){
+            lesson.setFree(true);
+            lessonRepository.save(lesson);
+        }
+        return lesson.getId() == lstCoursePart.get(0).getLessons().get(0).getId();
+    }
+
+    ;
+
+    public List<LessonProgress> addLessonProgressOfNewLessonForUserEnrolled(List<Long> lstEnrolledUserIds, Long lessonId, boolean isFirstLessonOfCourse) {
+        List<LessonProgress> addLessonProgressList = new ArrayList<>();
+        for (Long userId : lstEnrolledUserIds) {
+            LessonProgress lessonProgress = new LessonProgress();
+            lessonProgress.setProgress(0.0);
+            lessonProgress.setUserId(userId);
+            lessonProgress.setLessonId(lessonId);
+            lessonProgress.setLocked(!isFirstLessonOfCourse);
+            addLessonProgressList.add(lessonProgress);
+
+        }
+
+        return addLessonProgressList;
+    }
+
+    ;
 
     @Override
     public Lesson getLessonById(long id) throws Exception {
-        Lesson lesson =  lessonRepository.findById(id).orElseThrow(() -> new Exception("can not find lesson"));
 
-        if(quizzRepository.existsByLessonId(lesson.getId())){
+        Lesson lesson = lessonRepository.findById(id).orElseThrow(() -> new Exception("can not find lesson"));
+
+        if (quizzRepository.existsByLessonId(lesson.getId())) {
             lesson.setHaveTest(true);
         }
         return lesson;
@@ -242,22 +360,21 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         Lesson updateLesson = lessonRepository.findById(request.getId()).orElseThrow(() -> new Exception("can not find section"));
         long deletedMediaId = 0;
 
-        if(request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.VIDEO)
-        {
-            if(request.getMediaId() != null && request.getMediaId() != 0){
+        if (request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.VIDEO) {
+            if (request.getMediaId() != null && request.getMediaId() != 0) {
                 deleteOldVideoAndThumbnail(updateLesson.getMedia());
                 long lessonMediaId = updateLesson.getMediaId();
                 updateLesson.setMediaId(request.getMediaId());
                 deletedMediaId = lessonMediaId;
 
             }
-        }else  if(request.getType() == LessonType.TEXT && updateLesson.getType() == LessonType.VIDEO){
+        } else if (request.getType() == LessonType.TEXT && updateLesson.getType() == LessonType.VIDEO) {
             deleteOldVideoAndThumbnail(updateLesson.getMedia());
             long lessonMediaId = updateLesson.getMediaId();
             updateLesson.setMediaId(null);
             deletedMediaId = lessonMediaId;
 
-        }else if(request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.TEXT){
+        } else if (request.getType() == LessonType.VIDEO && updateLesson.getType() == LessonType.TEXT) {
             updateLesson.setMediaId(request.getMediaId());
 
         }
@@ -266,11 +383,43 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         updateLesson.setTitle(request.getTitle());
         updateLesson.setPassThreshold(request.getPassThreshold());
         updateLesson.setType(request.getType());
+        updateLesson.setFree(request.isFree());
+
+
+        int requestPosition = request.getPosition();
+        int currentPosition = updateLesson.getPosition();
+        if (requestPosition != currentPosition) {
+            // lấy tất cả lesson trong course part đó
+            List<Lesson> lstLesson = lessonRepository.findAllByCoursePartIdOrderByPositionAsc(updateLesson.getCoursePartId());
+            int lastPosition = lstLesson.get(lstLesson.size() - 1).getPosition();
+
+            if (requestPosition < currentPosition) {
+                for (Lesson ls : lstLesson) {
+                    if (ls.getPosition() >= requestPosition && ls.getPosition() < currentPosition) {
+                        ls.setPosition(ls.getPosition() + 1);
+                    }
+                }
+            } else {
+                for (Lesson ls : lstLesson) {
+                    if (ls.getPosition() > currentPosition && ls.getPosition() <= requestPosition) {
+                        ls.setPosition(ls.getPosition() - 1);
+                    }
+                }
+            }
+
+            if (requestPosition > lastPosition) {
+                updateLesson.setPosition(lastPosition);
+            } else {
+                updateLesson.setPosition(requestPosition);
+            }
+
+        }
 
         lessonRepository.save(updateLesson);
-        if(deletedMediaId!=0) {
+        if (deletedMediaId != 0) {
             imageRepository.deleteById(deletedMediaId);
         }
+
         return null;
     }
 
@@ -314,7 +463,11 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         }
 
         List<Quizz> lstQuizzes = quizzRepository.findAllByLessonId(request.getLessonId());
-        Lesson lesson =  lessonRepository.findById(request.getLessonId())
+        // update 100 progress
+        LessonProgress lessonProgressUpdate = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(), request.getLessonId());
+        lessonProgressUpdate.setProgress(100.0);
+        lessonProgressRepository.save(lessonProgressUpdate);
+        Lesson lesson = lessonRepository.findById(request.getLessonId())
                 .orElseThrow(() -> new Exception("can not find lesson"));
         int passThreshold = lesson.getPassThreshold();
         if (lstQuizzes == null) {
@@ -338,7 +491,7 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
                                 ? null
                                 : nextCoursePart.getLessons().stream().findFirst().orElse(null);
                     });
-            if (lessonUnlock != null){
+            if (lessonUnlock != null) {
                 LessonProgress lessonProgress = lessonProgressRepository
                         .findFirstByUserIdAndLessonId(user.getId(), lessonUnlock.getId());
                 lessonProgress.setLocked(false);
@@ -357,8 +510,14 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         if (user == null) {
             throw new Exception(Translator.toLocale("access_denied"));
         }
-        Lesson lesson =  lessonRepository.findById(lessonId)
+        // update 100 progress
+        LessonProgress lessonProgressUpdate = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(), lessonId);
+        lessonProgressUpdate.setProgress(100.0);
+        lessonProgressRepository.save(lessonProgressUpdate);
+
+        Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new Exception("can not find lesson"));
+        // find next lesson to unlock
         Lesson lessonUnlock = lessonRepository
                 .findFirstByPart_IdAndPosition(lesson.getCoursePartId(), lesson.getPosition() + 1)
                 .orElseGet(() -> {
@@ -370,7 +529,7 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
                             ? null
                             : nextCoursePart.getLessons().stream().findFirst().orElse(null);
                 });
-        if (lessonUnlock != null){
+        if (lessonUnlock != null) {
             LessonProgress lessonProgress = lessonProgressRepository
                     .findFirstByUserIdAndLessonId(user.getId(), lessonUnlock.getId());
             lessonProgress.setLocked(false);
@@ -379,6 +538,57 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         }
 
         return "FAILED";
+    }
+
+    @Override
+    public void deleteLesson(long lessonId) throws Exception {
+        User user = getUser();
+        if (user == null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new Exception("can not find lesson"));
+
+        long coursePartId = lesson.getCoursePartId();
+        int deletedPosition = lesson.getPosition();
+
+        deleteAllRelateOfLesson(lesson);
+        lessonRepository.deleteById(lessonId);
+
+        lessonRepository.flush();
+        List<Lesson> listRepositionLesson = lessonRepository.findAllByCoursePartIdOrderByPositionAsc(coursePartId);
+        if (listRepositionLesson.size() >= 1) {
+            List<Lesson> listSaveLesson = new ArrayList<>();
+            for (Lesson repositionLesson : listRepositionLesson) {
+                if (repositionLesson.getPosition() > deletedPosition) {
+                    repositionLesson.setPosition(repositionLesson.getPosition() - 1);
+                    listSaveLesson.add(repositionLesson);
+                }
+            }
+            lessonRepository.saveAll(listSaveLesson);
+        }
+    }
+
+    private void deleteAllRelateOfLesson(Lesson lesson) {
+
+        List<Quizz> deleteListQuizzes = quizzRepository.findAllByLessonId(lesson.getId());
+        List<LessonProgress> deleteListLessonProgress = lessonProgressRepository.findAllByLessonId(lesson.getId());
+        List<LessonComment> deleteLessonComment = lessonCommentRepository.findAllByLessonIdAndParentCommentIdIsNullOrderByUpdatedAtDesc(lesson.getId());
+        if (deleteLessonComment.size() > 0) {
+            for (LessonComment lsComment : deleteLessonComment) {
+                List<LessonComment> ls = lessonCommentRepository.findAllByParentCommentId(lsComment.getId());
+                lessonCommentRepository.deleteAll(ls);
+            }
+            lessonCommentRepository.deleteAll(deleteLessonComment);
+
+        }
+        if (deleteListLessonProgress.size() > 0) {
+            lessonProgressRepository.deleteAll(deleteListLessonProgress);
+        }
+        if (deleteListQuizzes.size() > 0) {
+            quizzRepository.deleteAll(deleteListQuizzes);
+        }
+
     }
 
     private void deleteOldVideoAndThumbnail(UploadFile uploadFile) {

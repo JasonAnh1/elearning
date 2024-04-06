@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class QuizzesRequest  {
+public class QuizzesRequest  implements Serializable {
     List<QuizzRequest> quizzList;
     long lessonId;
 }

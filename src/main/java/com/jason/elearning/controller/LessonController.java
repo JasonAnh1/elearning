@@ -85,4 +85,16 @@ public class LessonController extends BaseController {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/delete-lesson")
+    public ResponseEntity<?> deleteLesson(@Valid @RequestParam Long request) {
+        try {
+            if(request == 0 ) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            coursePartService.deleteLesson(request);
+            return ResponseEntity.ok("success");
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

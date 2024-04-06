@@ -63,6 +63,7 @@ public class CourseController extends BaseController{
             if(request == null
                     || request.getTitle() == null
                     || request.getCoursePartId() == 0
+                    || request.getPosition() == 0
                     ){
                 throw new Exception(Translator.toLocale("required_fields"));
             }

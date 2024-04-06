@@ -37,4 +37,16 @@ public class LessonRepositoryCustomImpl extends BaseRepository implements Lesson
                 .select(qLessonProgress)
                 .fetch();
     }
+
+    @Override
+    public List<Lesson> listLessonByListCoursePartId(List<Long> coursePartId) {
+        QLesson qLesson = QLesson.lesson;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qLesson.coursePartId.in(coursePartId));
+
+        return  query().from(qLesson)
+                .where(builder)
+                .select(qLesson)
+                .fetch();
+    }
 }

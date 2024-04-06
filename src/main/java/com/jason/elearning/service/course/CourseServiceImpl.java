@@ -1,20 +1,21 @@
 package com.jason.elearning.service.course;
 
 import com.jason.elearning.configuration.Translator;
-import com.jason.elearning.entity.Course;
-import com.jason.elearning.entity.CourseCategory;
-import com.jason.elearning.entity.Enroll;
-import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.repository.course.CourseCategoryRepository;
+import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.CourseRepository;
+import com.jason.elearning.repository.course.LessonRepository;
+import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CourseServiceImpl extends BaseService implements CourseService{
@@ -25,6 +26,12 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     private CourseCategoryRepository courseCategoryRepository;
     @Autowired
     private EnrollRepository enrollRepository;
+    @Autowired
+    private LessonProgressRepository lessonProgressRepository;
+    @Autowired
+    private CoursePartRepository coursePartRepository;
+    @Autowired
+    private LessonRepository lessonRepository;
     @Override
     public Course creatCourse(Course course) throws Exception {
         User user = getUser();
@@ -108,5 +115,52 @@ public class CourseServiceImpl extends BaseService implements CourseService{
         }
         return courseRepository.save(c);
     }
+
+    @Override
+    public List<Course> listCourseForUserEnrolled() throws Exception {
+        User user = getUser();
+        if (user ==null ) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+       List<Enroll> lstEnrolled = enrollRepository.findByUserId(user.getId());
+        List<Course> lstCourse = lstEnrolled.stream().map(
+                Enroll::getCourse
+        ).collect(Collectors.toList());
+
+        for(Course course: lstCourse ){
+            setProgress(course,user.getId());
+        }
+
+
+        return lstCourse;
+    }
+
+    private void setProgress(Course course, long id) {
+        List<Long> coursePartListId = coursePartRepository.findAllByCourseId(course.getId())
+                .stream().map(CoursePart::getId).collect(Collectors.toList());
+
+        List<Long> lessonList = lessonRepository.listLessonByListCoursePartId(coursePartListId)
+                .stream().map(Lesson::getId).collect(Collectors.toList());
+
+        List<LessonProgress> lessonProgresses = lessonRepository.listLearningLessonProgress(id,lessonList);
+        int lessonDone = 0;
+        for(LessonProgress lsProgress: lessonProgresses){
+            if(lsProgress.getProgress() == 100){
+                lessonDone++;
+            }
+        }
+        double total = lessonProgresses.size();
+        double courseProgress = lessonDone / total * 100;
+        if(total == 0){
+            course.setProgress(0);
+        }else {
+            course.setProgress(courseProgress);
+        }
+
+
+
+
+    }
+
 
 }

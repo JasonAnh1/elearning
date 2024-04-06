@@ -89,12 +89,13 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
                      firstLessonId = coursePartList.get(0).getLessons().get(0).getId();
 
                     List<Long> lessonIds = listLessonId(item.getId());
-                    List<LessonProgress> list = lessonIds.stream()
-                            .map(lessonId -> new LessonProgress().builder()
-                                    .lessonId(lessonId)
-                                    .locked(true)
-                                    .userId(user.getId())
-                                    .build()).collect(Collectors.toList());
+                    List<LessonProgress> list = lessonIds
+                                                        .stream()
+                                                        .map(lessonId -> new LessonProgress().builder()
+                                                        .lessonId(lessonId)
+                                                        .locked(true)
+                                                        .userId(user.getId())
+                                                        .build()).collect(Collectors.toList());
                     Long finalFirstLessonId = firstLessonId;
                     list.forEach(lessonProgress -> {
                         if(lessonProgress.getLessonId() == finalFirstLessonId) {
@@ -147,14 +148,7 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
 
         LessonProgress lessonProgress = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(),lessonId);
 
-        if(lessonProgress == null){
-            LessonProgress lessonProgress1 = new LessonProgress();
-            lessonProgress1.setVideoProgress(progress);
-            lessonProgress1.setUserId(user.getId());
-            lessonProgress1.setLessonId(lessonId);
-            lessonProgress1.setProgress(0.0);
-            lessonProgressRepository.save(lessonProgress1);
-        }else {
+        if(lessonProgress != null){
             Lesson lesson = lessonProgress.getLesson();
             if (lesson.getPassThreshold() == 0 && progress == 100) {
                 lessonProgress.setProgress(100.0);

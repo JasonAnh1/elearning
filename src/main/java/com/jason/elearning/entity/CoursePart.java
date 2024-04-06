@@ -23,7 +23,7 @@ public class CoursePart extends DateAudit{
 //    @JoinColumn(name = "courseId", referencedColumnName = "id", insertable = false, updatable = false)
 //    private Course course;
 
-    @OneToMany(mappedBy = "part",fetch = FetchType.EAGER,cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "part",fetch = FetchType.EAGER)
     @OrderBy("position")
     private List<Lesson> lessons;
 

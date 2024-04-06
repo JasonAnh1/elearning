@@ -10,4 +10,5 @@ import java.util.List;
 public interface LessonCommentRepository extends JpaRepository<LessonComment,Long> {
     List<LessonComment> findAllByLessonIdAndParentCommentIdIsNullOrderByUpdatedAtDesc(long lessonId);
     List<LessonComment> findAllByParentCommentId(long parentCommentId);
+    List<LessonComment> findAllByLessonId(long lessonId);
 }

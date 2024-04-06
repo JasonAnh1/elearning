@@ -11,4 +11,5 @@ public interface CourseService {
     Long countListCourse(Long categoryId,String title,Long authorId,String authorName, CourseStatus status,Long startPrice,Long endPrice) throws Exception;
     Course getCourseById(Long courseId) throws Exception;
     Course updateCourse(Course course) throws  Exception;
+    List<Course>listCourseForUserEnrolled() throws Exception;
 }

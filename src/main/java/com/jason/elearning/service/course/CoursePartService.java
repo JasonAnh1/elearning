@@ -13,7 +13,7 @@ public interface CoursePartService {
     CoursePart addSection(CoursePart coursePart);
     CoursePart updateSection(CoursePart coursePart) throws Exception;
     List<CoursePart> listCourseSession(long id);
-    Lesson addLesson(Lesson lesson);
+    Lesson addLesson(Lesson lesson) throws Exception;
     Lesson getLessonById(long id) throws Exception;
     List<Quizz> addQuizzes(QuizzesRequest request);
     List<Quizz> listQuizzes(Long lessonId);
@@ -22,6 +22,7 @@ public interface CoursePartService {
     List<CoursePart> listLearningLesson(long id) throws Exception;
     String checkAnswer(AnswerSheetRequest request) throws Exception;
     String unlockLesson(long lessonId) throws Exception;
+    void deleteLesson(long lessonId) throws Exception;
 }
 
 

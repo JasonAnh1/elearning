@@ -9,7 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface CoursePartRepository extends JpaRepository<CoursePart,Long> , CoursePartRepositoryCustom{
-    List<CoursePart> findAllByCourseId(Long authorId);
-    List<CoursePart> findAllByCourseIdOrderByPartNumber(Long authorId);
+    List<CoursePart> findAllByCourseId(Long courseId);
+    List<CoursePart> findAllByCourseIdOrderByPartNumber(Long courseId);
     Optional<CoursePart> findFirstByCourseIdAndPartNumber(long courseId, int partNumber);
+
 }

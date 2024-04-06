@@ -60,6 +60,8 @@ public class Course extends DateAudit{
     @JoinColumn(name = "authorId", referencedColumnName = "id", insertable = false, updatable = false)
     private User author;
 
+    @Transient
+    private double progress;
 //    @OneToMany(mappedBy = "course",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
 //    private Set<CoursePart> courseParts;
 //

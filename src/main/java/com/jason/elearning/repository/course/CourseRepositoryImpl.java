@@ -86,6 +86,12 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
     }
 
     @Override
+    public List<Course> listForUserEnrolled(long categoryId, String status) {
+
+        return null;
+    }
+
+    @Override
     public Long countGetCourse(String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
         QCourse qCourse = QCourse.course;
         BooleanBuilder builder = new BooleanBuilder();
