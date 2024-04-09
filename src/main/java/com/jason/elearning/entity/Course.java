@@ -37,7 +37,7 @@ public class Course extends DateAudit{
     @Lob
     @Column(columnDefinition = "TEXT")
     private String requirement;
-    private int rating;
+    private Double rating;
     private String advertise;
     private CourseStatus status;
     private CourseType type;

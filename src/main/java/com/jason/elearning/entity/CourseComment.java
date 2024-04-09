@@ -22,5 +22,7 @@ public class CourseComment extends DateAudit{
     @OneToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "enrollId", referencedColumnName = "id", insertable = false, updatable = false)
     private Enroll enroll;
+    @Transient
+    private User user;
 
 }

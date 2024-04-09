@@ -4,11 +4,11 @@ import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.RoleName;
+import com.jason.elearning.repository.comment.CourseCommentRepository;
 import com.jason.elearning.repository.course.CourseCategoryRepository;
 import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.repository.course.LessonRepository;
-import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +27,11 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     @Autowired
     private EnrollRepository enrollRepository;
     @Autowired
-    private LessonProgressRepository lessonProgressRepository;
-    @Autowired
     private CoursePartRepository coursePartRepository;
     @Autowired
     private LessonRepository lessonRepository;
+    @Autowired
+    private CourseCommentRepository courseCommentRepository;
     @Override
     public Course creatCourse(Course course) throws Exception {
         User user = getUser();
@@ -47,9 +47,25 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     public  List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception{
 
         User user = getUser();
-
-        return courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice, user == null ? -1 : user.getId());
+        List<Course> lstCourse = courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice, user == null ? -1 : user.getId());
+        calculateCourseRating(lstCourse);
+        return lstCourse;
     }
+
+    private void calculateCourseRating(List<Course> lstCourse) {
+        for(Course course: lstCourse){
+            List<Double> lstRate = courseCommentRepository.listCommentByCourseId(course.getId())
+                                        .stream()
+                                        .map(CourseComment::getRate).collect(Collectors.toList());
+            if(lstRate.size() > 0){
+                double sumRate = lstRate.stream().mapToDouble(Double::doubleValue).sum();
+                double medRate = sumRate / lstRate.size();
+
+                course.setRating(medRate);
+            }
+        }
+    }
+
 
     @Override
     public Long countListCourse(Long categoryId, String title, Long authorId,String authorName, CourseStatus status,Long startPrice,Long endPrice) throws Exception {
@@ -145,6 +161,9 @@ public class CourseServiceImpl extends BaseService implements CourseService{
         List<LessonProgress> lessonProgresses = lessonRepository.listLearningLessonProgress(id,lessonList);
         int lessonDone = 0;
         for(LessonProgress lsProgress: lessonProgresses){
+            if(lsProgress.getProgress() == null){
+                lsProgress.setProgress(0.0);
+            }
             if(lsProgress.getProgress() == 100){
                 lessonDone++;
             }
@@ -156,9 +175,6 @@ public class CourseServiceImpl extends BaseService implements CourseService{
         }else {
             course.setProgress(courseProgress);
         }
-
-
-
 
     }
 
