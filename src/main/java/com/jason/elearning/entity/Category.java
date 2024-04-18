@@ -1,15 +1,16 @@
 package com.jason.elearning.entity;
 
+import com.jason.elearning.entity.constants.CategoryType;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
 
 @Entity
-@Table(name = "course_category")
+@Table(name = "category")
 @Getter
 @Setter
-public class CourseCategory extends DateAudit {
+public class Category extends DateAudit {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -20,5 +21,7 @@ public class CourseCategory extends DateAudit {
     @Lob
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    private CategoryType type;
 
 }

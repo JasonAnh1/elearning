@@ -89,7 +89,7 @@ public class CourseServiceImpl extends BaseService implements CourseService{
 
         Course c = courseRepository.findById(request.getId()).orElseThrow(()-> new Exception("can not find course"));
         if(request.getCategoryId() != 0){
-            CourseCategory cc = courseCategoryRepository.findById(request.getCategoryId()).orElseThrow(()-> new Exception("can not find course category"));
+            Category cc = courseCategoryRepository.findById(request.getCategoryId()).orElseThrow(()-> new Exception("can not find course category"));
             c.setCategoryId(cc.getId());
         }
         if(request.getTitle()!=null){

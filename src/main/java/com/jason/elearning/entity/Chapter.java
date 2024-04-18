@@ -1,5 +1,6 @@
 package com.jason.elearning.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,5 +24,6 @@ public class Chapter extends DateAudit
     private int chapNumber;
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "bookId", referencedColumnName = "id", insertable = false, updatable = false)
+    @JsonIgnore
     private Book book;
 }

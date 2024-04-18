@@ -41,6 +41,4 @@ public class Lesson extends DateAudit {
     @Transient
     private boolean isHaveTest = false;
 
-
-
 }

@@ -54,7 +54,7 @@ public class Course extends DateAudit{
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "categoryId", referencedColumnName = "id", insertable = false, updatable = false)
-    private CourseCategory category;
+    private Category category;
 
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "authorId", referencedColumnName = "id", insertable = false, updatable = false)

@@ -2,14 +2,14 @@ package com.jason.elearning.controller;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Course;
-import com.jason.elearning.entity.CourseCategory;
+import com.jason.elearning.entity.Category;
 import com.jason.elearning.entity.CoursePart;
 import com.jason.elearning.entity.Lesson;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.request.WrappUpdateQuizzLesson;
 import com.jason.elearning.entity.response.BaseResponse;
-import com.jason.elearning.service.course.CourseCategoryService;
+import com.jason.elearning.service.course.CategoryService;
 import com.jason.elearning.service.course.CoursePartService;
 import com.jason.elearning.service.course.CourseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class CourseController extends BaseController{
     @Autowired
     private CourseService courseService;
     @Autowired
-    private CourseCategoryService categoryService;
+    private CategoryService categoryService;
     @Autowired
     private CoursePartService coursePartService;
     @PostMapping("v1/create-quizzes")
@@ -168,7 +168,7 @@ public class CourseController extends BaseController{
         }
     }
     @PostMapping("v1/create-course-category")
-    public ResponseEntity<?> createCourseCategory(@Valid @RequestBody final CourseCategory request) {
+    public ResponseEntity<?> createCourseCategory(@Valid @RequestBody final Category request) {
         try {
             if(request == null || request.getTitle() == null) {
                 throw new Exception(Translator.toLocale("required_fields"));
@@ -188,7 +188,7 @@ public class CourseController extends BaseController{
         }
     }
     @PostMapping("v1/update-course-categories")
-    public ResponseEntity<?> updateCourseCategory(@Valid @RequestBody final CourseCategory request) {
+    public ResponseEntity<?> updateCourseCategory(@Valid @RequestBody final Category request) {
         try {
             if(request == null || request.getId() == 0) {
                 throw new Exception(Translator.toLocale("required_fields"));

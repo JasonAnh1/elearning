@@ -40,7 +40,28 @@ public class FileController extends BaseController{
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("download/{fileName:.+}")
+    public ResponseEntity<?> getVideo(@PathVariable final String fileName) throws Exception {
+        Resource resource = fileStorageService.loadFileAsResource(fileName);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(new InputStreamResource(resource.getInputStream()));
+    }
 
+    @PostMapping("v1/file/upload-file")
+    public ResponseEntity<?> uploadFile(HttpServletRequest httpServletRequest, @RequestParam("file") final MultipartFile file) {
+        try {
+            if(file == null || httpServletRequest == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            if(file.getSize() > 1024*1024*20) {
+                throw new Exception("Dung lượng file quá lớn, vui lòng chọn file nhỏ hơn 20MB");
+            }
+            UploadFile uploadFile = fileStorageService.storeFile(httpServletRequest, file);
+            return ResponseEntity.ok(new BaseResponse(Translator.toLocale("succecss"), uploadFile));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
     @GetMapping("images/{fileName:.+}")
     public ResponseEntity<InputStreamResource> getImage(@PathVariable final String fileName) throws Exception {
         Resource resource = fileStorageService.loadFileAsResource(fileName);
