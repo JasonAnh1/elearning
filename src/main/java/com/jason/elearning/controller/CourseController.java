@@ -139,7 +139,7 @@ public class CourseController extends BaseController{
                                            @RequestParam(required = false) Long categoryId,
                                            @RequestParam(required = false) Long authorId,
                                            @RequestParam(required = false) String authorName,
-                                           @RequestParam(required = false)CourseStatus status,
+                                           @RequestParam(required = false) CourseStatus status,
                                            @RequestParam(required = false) Long startPrice,
                                            @RequestParam(required = false) Long endPrice) {
         try {

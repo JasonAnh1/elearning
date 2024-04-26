@@ -2,15 +2,20 @@ package com.jason.elearning.service.user;
 
 
 import com.jason.elearning.configuration.Translator;
-import com.jason.elearning.entity.Enroll;
-import com.jason.elearning.entity.Role;
-import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.constants.EnrollStatus;
+import com.jason.elearning.entity.constants.PlanType;
 import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.entity.constants.UserActive;
 import com.jason.elearning.entity.request.EnrollRequest;
+import com.jason.elearning.entity.request.PlanCourseRequest;
+import com.jason.elearning.repository.course.CoursePartRepository;
+import com.jason.elearning.repository.enroll.LessonProgressRepository;
+import com.jason.elearning.repository.plan.PlanCourseRepository;
+import com.jason.elearning.repository.plan.PlanRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.repository.user.RoleRepository;
+import com.jason.elearning.repository.user.UserRepository;
 import com.jason.elearning.security.CustomUserDetailsService;
 import com.jason.elearning.security.JwtTokenProvider;
 import com.jason.elearning.security.UserPrincipal;
@@ -25,9 +30,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -46,10 +50,26 @@ class UserServiceImpl extends BaseService implements UserService {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
+
     @Autowired
     private EnrollRepository enrollRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PlanRepository planRepository;
+
+    @Autowired
+    private PlanCourseRepository planCourseRepository;
+
+    @Autowired
+    private CoursePartRepository coursePartRepository;
+
+    @Autowired
+    private LessonProgressRepository lessonProgressRepository;
     /////////////////////User///////////
+
 
     @Override
     public void test() throws Exception {
@@ -149,6 +169,30 @@ class UserServiceImpl extends BaseService implements UserService {
     }
 
     @Override
+    public User signUpAsOrganization(User request) throws Exception {
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new Exception(Translator.toLocale("phone_exists"));
+        }
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new Exception(Translator.toLocale("email_exists"));
+        }
+        if (userRepository.existsByName(request.getName())) {
+            throw new Exception(Translator.toLocale("name_exists"));
+        }
+
+        request.setActive(UserActive.UNVERIFY);
+        request.setPassword(passwordEncoder.encode(request.getPassword()));
+        Role userRole = roleRepository.findByName(RoleName.ROLE_ORGANIZATION).orElseThrow(() -> new RuntimeException("User Role not set."));
+        request.setRoles(Collections.singleton(userRole));
+        User result = userRepository.save(request);
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(result.getPhone());
+        String jwt = tokenProvider.generateTokenByUser((UserPrincipal) userDetails);
+        result.setAccessToken(jwt);
+        return result;
+    }
+
+    @Override
     public User getUserInfo(Long userId) throws Exception {
         User me = getUser();
         if (userId == null || me.getId() == userId) {
@@ -226,5 +270,166 @@ class UserServiceImpl extends BaseService implements UserService {
             throw new Exception(Translator.toLocale("access_denied"));
         }
         return userRepository.countListUser(phone, name,deleted);
+    }
+
+    @Override
+    public User addToOrganization(User request) throws Exception {
+        User user = getUser();
+        if (user ==null || user.getRoles().get(0).getName() != RoleName.ROLE_ORGANIZATION) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        Plan plan = planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getId());
+        if(plan == null){
+            throw new Exception(Translator.toLocale("you must have a plan before adding member"));
+        }
+        long totalMembers = userRepository.findALlByOrganizationId(user.getId()).size();
+        if(plan.getType() == PlanType.STARTER && totalMembers >= 10){
+            throw new Exception(Translator.toLocale("starter plan limited member"));
+        } else if(plan.getType() == PlanType.POPULAR && totalMembers >= 20)
+        {
+            throw new Exception(Translator.toLocale("popular plan limited member"));
+        }
+
+        User addOrganizationUser = userRepository.findUserById(request.getId());
+        addOrganizationUser.setOrganizationId(user.getId());
+        List<Long> listCourseId = planCourseRepository.findAllByPlanId(plan.getId())
+                .stream()
+                .map(PlanCourse::getCourseID)
+                .collect(Collectors.toList());
+        lessonProgressRepository.saveAll( createProgressForNewMember(addOrganizationUser.getId(),listCourseId));
+
+        return addOrganizationUser;
+    }
+
+    @Override
+    public List<User> listOrganizationMember(Long id) throws Exception {
+        return userRepository.findALlByOrganizationId(id);
+    }
+
+    @Override
+    public List<User> getListUserForOrg(String name) throws Exception {
+        return userRepository.getListUserForOrg(name);
+    }
+
+    @Override
+    public List<User> listOrganizations(UserActive active,String name) throws Exception {
+        return userRepository.getListOrganizations(active,name);
+    }
+
+    @Override
+    public List<PlanCourse> addPlanCourse(PlanCourseRequest request) throws Exception {
+        User user = getUser();
+        if (user ==null || user.getRoles().get(0).getName() != RoleName.ROLE_ORGANIZATION) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        Plan plan = planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getId());
+        long totalCourseInPlan = planCourseRepository.findAllByPlanId(plan.getId()).size();
+
+        // kiem tra so luong course trong plan co vuot qua khong
+        if(plan.getType() == PlanType.STARTER){
+            if(totalCourseInPlan + request.getIds().size() > 5 ){
+                throw new Exception(Translator.toLocale("reach plan limited course"));
+            }
+        } else if(plan.getType() == PlanType.POPULAR){
+            if(totalCourseInPlan + request.getIds().size() > 10 ){
+                throw new Exception(Translator.toLocale("reach plan limited course"));
+            }
+        }
+
+        // tao 1 list cac lesson progress cho cac user trong ORG
+        List<LessonProgress> lessonProgresses = new ArrayList<>();
+        // lay tat ca member trong org
+        List<Long> members = userRepository.findALlByOrganizationId(user.getId())
+                .stream()
+                .map(User::getId)
+                .collect(Collectors.toList());
+
+        List<PlanCourse> planCourses = new ArrayList<>();
+        request.getIds().forEach(
+                courseId -> {
+                    PlanCourse pc = new PlanCourse();
+                    pc.setCourseID(courseId);
+                    pc.setPlanId(plan.getId());
+                    planCourses.add(pc);
+
+                    lessonProgresses.addAll( createProgressForOrgMember(members,courseId));
+
+                }
+        );
+        lessonProgressRepository.saveAll(lessonProgresses);
+        return planCourseRepository.saveAll(planCourses);
+    }
+    public List<LessonProgress> createProgressForNewMember(Long userId,List<Long> courseIds){
+        List<LessonProgress> progressList  = new ArrayList<>();
+
+        courseIds.forEach(courseId ->{
+            List<Long> lessonIds = listLessonId(courseId);
+            if(!checkUserLessonProgress(lessonIds, userId)){
+                List<LessonProgress> list = lessonIds
+                        .stream()
+                        .map(lessonId -> new LessonProgress().builder()
+                                .lessonId(lessonId)
+                                .locked(false)
+                                .userId(userId)
+                                .build()).collect(Collectors.toList());
+
+                progressList.addAll(list);
+            }
+        });
+
+        return progressList;
+    };
+    public List<LessonProgress> createProgressForOrgMember(List<Long> userIds,Long courseId){
+
+        List<Long> lessonIds = listLessonId(courseId);
+        List<LessonProgress> progressList  = new ArrayList<>();
+        userIds.forEach(
+                id ->{
+                    // chi tao progress neu member nay chua tu mua khoa hoc
+                    if(!checkUserLessonProgress(lessonIds, id)){
+                        List<LessonProgress> list = lessonIds
+                                .stream()
+                                .map(lessonId -> new LessonProgress().builder()
+                                        .lessonId(lessonId)
+                                        .locked(false)
+                                        .userId(id)
+                                        .build()).collect(Collectors.toList());
+
+                        progressList.addAll(list);
+                    }
+                }
+        );
+
+        return progressList;
+    };
+
+    boolean checkUserLessonProgress(List<Long> lessonIds,long userId){
+        return lessonIds.stream()
+                // Kiểm tra xem có bất kỳ lessonId nào đã tồn tại LessonProgress với userId
+                .anyMatch(lessonId -> lessonProgressRepository.existsByLessonIdAndUserId(lessonId, userId));
+    }
+
+    public List<Long> listLessonId(Long courseId){
+        List<Long> lessonIds  = new ArrayList<>();
+        List<CoursePart> lstCoursePart = coursePartRepository.findAllByCourseId(courseId);
+        if(lstCoursePart.size() > 0 ){
+            lessonIds =  lstCoursePart
+                    .stream()
+                    .map(coursePart -> coursePart.getLessons())
+                    .flatMap(Collection::stream)
+                    .map(lesson -> lesson.getId()).collect(Collectors.toList());
+        }
+
+        return lessonIds;
+    };
+
+    @Override
+    public Plan getPlan() throws Exception {
+        User user = getUser();
+        if (user ==null || user.getRoles().get(0).getName() != RoleName.ROLE_ORGANIZATION) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+
+        return planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getId());
     }
 }

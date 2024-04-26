@@ -33,6 +33,7 @@ public class User extends DateAudit{
 
     private Long avatarId;
 
+    private Long organizationId;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "avatarId", referencedColumnName = "id", insertable = false, updatable = false)
@@ -54,12 +55,16 @@ public class User extends DateAudit{
     @Transient
     private String accessToken;
 
-
-
-
-
     @Transient
     private RoleName roleName;
+
+    public Long getOrganizationId() {
+        return organizationId;
+    }
+
+    public void setOrganizationId(Long organizationId) {
+        this.organizationId = organizationId;
+    }
 
     public UserActive getActive() {
         return active;

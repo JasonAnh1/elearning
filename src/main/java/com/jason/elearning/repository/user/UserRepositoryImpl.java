@@ -3,6 +3,8 @@ package com.jason.elearning.repository.user;
 
 import com.jason.elearning.entity.QUser;
 import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.constants.RoleName;
+import com.jason.elearning.entity.constants.UserActive;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
 import org.apache.commons.lang3.StringUtils;
@@ -61,6 +63,47 @@ public class UserRepositoryImpl extends BaseRepository implements UserRepository
                 .from(qUser)
                 .where(builder)
                 .fetchCount();
+    }
+
+    @Override
+    public List<User> getListUserForOrg(String name) {
+        QUser qUser =QUser.user;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if(!StringUtils.isEmpty(name)){
+            builder.and(qUser.name.like("%"+name+"%"));
+        }
+
+        return query()
+                .select(qUser)
+                .from(qUser)
+                .where(builder)
+                .fetch();
+    }
+
+    @Override
+    public List<User> getListOrganizations(UserActive active, String name) {
+        QUser qUser =QUser.user;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qUser.roles.any().name.eq(RoleName.ROLE_ORGANIZATION));
+        if(active != null){
+            builder.and(qUser.active.eq(active));
+        }
+        if(!StringUtils.isEmpty(name)){
+            builder.and(qUser.name.like("%"+name+"%"));
+        }
+
+        return query()
+                .select(qUser)
+                .from(qUser)
+                .where(builder)
+                .fetch();
+    }
+
+    @Override
+    public long countOrganizationMember(Long id) {
+
+        return 0;
     }
 
 }

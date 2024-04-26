@@ -20,6 +20,8 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
 
+
+
     @PostMapping("v1/create-lesson-comment")
         public ResponseEntity<?> createLessonComment(@Valid @RequestBody final LessonComment request) {
         try {
@@ -28,6 +30,7 @@ public class CommentController {
                 throw new Exception(Translator.toLocale("required_fields"));
             }
             commentService.addLessonComment(request);
+
             return ResponseEntity.ok("success");
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));

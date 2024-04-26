@@ -1,13 +1,14 @@
 package com.jason.elearning.service.comment;
 
 import com.jason.elearning.configuration.Translator;
-import com.jason.elearning.entity.CourseComment;
-import com.jason.elearning.entity.Enroll;
-import com.jason.elearning.entity.LessonComment;
-import com.jason.elearning.entity.User;
+import com.jason.elearning.controller.NotificationController;
+import com.jason.elearning.entity.*;
 import com.jason.elearning.entity.request.CourseCommentRequest;
 import com.jason.elearning.repository.comment.CourseCommentRepository;
 import com.jason.elearning.repository.comment.LessonCommentRepository;
+import com.jason.elearning.repository.course.CoursePartRepository;
+import com.jason.elearning.repository.course.CourseRepository;
+import com.jason.elearning.repository.course.LessonRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,14 @@ public class CommentServiceImpl extends BaseService implements CommentService {
     private CourseCommentRepository courseCommentRepository;
     @Autowired
     private EnrollRepository enrollRepository;
-
+    @Autowired
+    private NotificationController notificationController;
+    @Autowired
+    private LessonRepository lessonRepository;
+    @Autowired
+    private CoursePartRepository coursePartRepository;
+    @Autowired
+    private CourseRepository courseRepository;
     @Override
     public void addLessonComment(LessonComment request) throws Exception {
         User user = getUser();
@@ -34,9 +42,18 @@ public class CommentServiceImpl extends BaseService implements CommentService {
         }
 
         request.setUserId(user.getId());
+
+        Long ownerId = getLessonOwnerId(request.getLessonId());
+        String notificationMessage = user.getName() + " liked your post.";
+        notificationController.sendNotification(ownerId, notificationMessage);
         lessonCommentRepository.save(request);
     }
-
+    public Long getLessonOwnerId(Long lessonId) throws Exception {
+        Long coursePartId  = lessonRepository.findById(lessonId).orElseThrow(()-> new Exception("can not find lesson ")).getCoursePartId();
+        Long courseId = coursePartRepository.findById(coursePartId).orElseThrow(()-> new Exception("can not find cp ")).getCourseId();
+        User user = courseRepository.findById(courseId).orElseThrow(()-> new Exception("can not find course ")).getAuthor();
+        return user.getId();
+    }
     @Override
     public List<LessonComment> listLessonComment(Long lessonId) throws Exception {
 

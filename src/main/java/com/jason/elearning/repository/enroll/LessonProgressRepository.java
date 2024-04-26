@@ -10,5 +10,5 @@ import java.util.List;
 public interface LessonProgressRepository extends JpaRepository<LessonProgress,Long> {
     LessonProgress findFirstByUserIdAndLessonId(long userId,long lessonId);
     List<LessonProgress> findAllByLessonId(long lessonId);
-
+    boolean existsByLessonIdAndUserId(Long lessonId,Long userId);
 }

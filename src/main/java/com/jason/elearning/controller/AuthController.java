@@ -74,6 +74,23 @@ public class AuthController extends BaseController{
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+
+    @PostMapping("v1/auth/signupAsOrganization")
+    public ResponseEntity<?> signupAsOrganization(@Valid @RequestBody final User request) {
+        try {
+            if(request == null
+                    || request.getPhone() == null
+                    || request.getPassword() == null
+                    || request.getEmail() == null
+                    || request.getName() == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok(new BaseResponse(Translator.toLocale("register_success"), userService.signUpAsOrganization(request)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+
     @GetMapping("v1/verify/lecture")
     public ResponseEntity<?> verifyLecture(@RequestParam Long id) {
         try {

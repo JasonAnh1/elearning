@@ -123,4 +123,18 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .select(qCourse)
                 .orderBy(qCourse.id.desc()).fetchCount();
     }
+
+    @Override
+    public List<Course> listByListIds(List<Long> ids) {
+        QCourse qCourse = QCourse.course;
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(qCourse.deleted.eq(false));
+        builder.and(qCourse.id.in(ids));
+
+        return  query().from(qCourse)
+                .where(builder)
+                .select(qCourse)
+                .orderBy(qCourse.id.desc())
+                .fetch();
+    }
 }
