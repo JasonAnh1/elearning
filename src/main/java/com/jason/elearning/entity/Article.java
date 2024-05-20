@@ -25,4 +25,9 @@ public class Article extends DateAudit{
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "userId", referencedColumnName = "id", insertable = false, updatable = false)
     private User user;
+    private Long mediaId;
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "mediaId", referencedColumnName = "id", insertable = false, updatable = false)
+    private UploadFile media;
+
 }
