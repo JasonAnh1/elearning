@@ -97,4 +97,22 @@ public class OrganizationController extends BaseController{
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/get-org-course-for-member")
+    public ResponseEntity<?> getOrgCourseForMember(@RequestParam Long id) {
+        try {
+
+            return ResponseEntity.ok(new BaseResponse("Success", planService.getOrgCourseForMember(id)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @GetMapping("v1/remove-member")
+    public ResponseEntity<?> removeMember(@RequestParam Long id) {
+        try {
+
+            return ResponseEntity.ok(new BaseResponse("Success", userService.removeMember(id)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

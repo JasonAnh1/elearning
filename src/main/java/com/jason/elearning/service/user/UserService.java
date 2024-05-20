@@ -45,4 +45,5 @@ public interface UserService {
     List<User> listOrganizations(UserActive active,String name) throws Exception;
     List<PlanCourse> addPlanCourse(PlanCourseRequest request) throws Exception;
     Plan getPlan() throws Exception;
+    User removeMember(Long userId) throws Exception;
 }

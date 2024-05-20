@@ -9,33 +9,50 @@ import com.jason.elearning.repository.course.CourseCategoryRepository;
 import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.repository.course.LessonRepository;
+import com.jason.elearning.repository.plan.PlanCourseRepository;
+import com.jason.elearning.repository.plan.PlanRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.service.BaseService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class CourseServiceImpl extends BaseService implements CourseService{
+public class CourseServiceImpl extends BaseService implements CourseService {
 
     @Autowired
     private CourseRepository courseRepository;
+
     @Autowired
     private CourseCategoryRepository courseCategoryRepository;
+
     @Autowired
     private EnrollRepository enrollRepository;
+
     @Autowired
     private CoursePartRepository coursePartRepository;
+
     @Autowired
     private LessonRepository lessonRepository;
+
     @Autowired
     private CourseCommentRepository courseCommentRepository;
+
+    @Autowired
+    private PlanRepository planRepository;
+
+    @Autowired
+    private PlanCourseRepository planCourseRepository;
+
     @Override
     public Course creatCourse(Course course) throws Exception {
         User user = getUser();
-        if (user ==null || user.getRoles().get(0).getName() == RoleName.ROLE_LEARNER) {
+        if (user == null || user.getRoles().get(0).getName() == RoleName.ROLE_LEARNER) {
             throw new Exception(Translator.toLocale("access_denied"));
         }
         course.setAuthorId(user.getId());
@@ -44,20 +61,57 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     }
 
     @Override
-    public  List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception{
+    public List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception {
 
         User user = getUser();
-        List<Course> lstCourse = courseRepository.getCourse(page,title,categoryId,authorId,authorName,status,startPrice,endPrice, user == null ? -1 : user.getId());
+        List<Course> lstCourse = courseRepository.getCourse(page, title, categoryId, authorId, authorName, status, startPrice, endPrice, user == null ? -1 : user.getId());
+        // update logic org , if user in org and that course was in there pack user cant not buy anymore
+        if (user != null && user.getOrganizationId() != null) {
+            Plan plan = planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getOrganizationId());
+            List<PlanCourse> listPlanCourses = planCourseRepository.findAllByPlanId(plan.getId());
+
+
+            List<Course> listOrgCourse = new ArrayList<>();
+
+            // Duyệt qua từng PlanCourse trong listOrgCourse.
+            for (PlanCourse planCourse : listPlanCourses) {
+                // Lấy ID của course từ PlanCourse.
+                Long courseId = planCourse.getCourseID();
+
+                // Sử dụng CourseRepository để tìm khóa học theo ID.
+                Optional<Course> courseOpt = courseRepository.findById(courseId);
+
+                // Nếu khóa học được tìm thấy, thêm nó vào danh sách.
+                courseOpt.ifPresent(listOrgCourse::add);
+            }
+
+            // Tạo một Set để chứa các ID của khóa học trong danh sách `courses`
+            Set<Long> courseIds = listOrgCourse.stream()
+                    .map(Course::getId)
+                    .collect(Collectors.toSet());
+
+
+            // Dùng Stream để cập nhật thuộc tính `isEnrolled` của khóa học trong `lstCourse` nếu khóa học có trong danh sách `courses`.
+            lstCourse
+                    .forEach(course -> {
+                        // Kiểm tra nếu ID của khóa học trong `lstCourse` có trong `Set` các ID của khóa học trong danh sách `courses`.
+                        if (courseIds.contains(course.getId())) {
+                            // Nếu có, cập nhật thuộc tính `isEnrolled` của khóa học trong `lstCourse`.
+                            course.setIsEnrolled(true);
+                        }
+                    });
+
+        }
         calculateCourseRating(lstCourse);
         return lstCourse;
     }
 
     private void calculateCourseRating(List<Course> lstCourse) {
-        for(Course course: lstCourse){
+        for (Course course : lstCourse) {
             List<Double> lstRate = courseCommentRepository.listCommentByCourseId(course.getId())
-                                        .stream()
-                                        .map(CourseComment::getRate).collect(Collectors.toList());
-            if(lstRate.size() > 0){
+                    .stream()
+                    .map(CourseComment::getRate).collect(Collectors.toList());
+            if (lstRate.size() > 0) {
                 double sumRate = lstRate.stream().mapToDouble(Double::doubleValue).sum();
                 double medRate = sumRate / lstRate.size();
 
@@ -68,17 +122,17 @@ public class CourseServiceImpl extends BaseService implements CourseService{
 
 
     @Override
-    public Long countListCourse(Long categoryId, String title, Long authorId,String authorName, CourseStatus status,Long startPrice,Long endPrice) throws Exception {
-        return courseRepository.countGetCourse(title,categoryId,authorId,authorName,status,startPrice,endPrice);
+    public Long countListCourse(Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception {
+        return courseRepository.countGetCourse(title, categoryId, authorId, authorName, status, startPrice, endPrice);
     }
 
     @Override
     public Course getCourseById(Long courseId) throws Exception {
         User user = getUser();
         Course course = courseRepository.findById(courseId)
-                .orElseThrow(()-> new Exception("can not find course"));
-        if(user!= null){
-            Enroll enroll = enrollRepository.findFirstByUserIdAndCourseId(user.getId(),courseId);
+                .orElseThrow(() -> new Exception("can not find course"));
+        if (user != null) {
+            Enroll enroll = enrollRepository.findFirstByUserIdAndCourseId(user.getId(), courseId);
             course.setIsEnrolled(enroll != null);
         }
         return course;
@@ -87,46 +141,46 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     @Override
     public Course updateCourse(Course request) throws Exception {
 
-        Course c = courseRepository.findById(request.getId()).orElseThrow(()-> new Exception("can not find course"));
-        if(request.getCategoryId() != 0){
-            Category cc = courseCategoryRepository.findById(request.getCategoryId()).orElseThrow(()-> new Exception("can not find course category"));
+        Course c = courseRepository.findById(request.getId()).orElseThrow(() -> new Exception("can not find course"));
+        if (request.getCategoryId() != 0) {
+            Category cc = courseCategoryRepository.findById(request.getCategoryId()).orElseThrow(() -> new Exception("can not find course category"));
             c.setCategoryId(cc.getId());
         }
-        if(request.getTitle()!=null){
+        if (request.getTitle() != null) {
             c.setTitle(request.getTitle());
         }
-        if(request.getCourseContent()!=null){
+        if (request.getCourseContent() != null) {
             c.setCourseContent(request.getCourseContent());
         }
-        if(request.getDescription()!=null){
+        if (request.getDescription() != null) {
             c.setDescription(request.getDescription());
         }
-        if(request.getDetail()!=null){
+        if (request.getDetail() != null) {
             c.setDetail(request.getDetail());
         }
-        if(request.getDescription()!=null){
+        if (request.getDescription() != null) {
             c.setDescription(request.getDescription());
         }
-        if(request.getShortDes()!=null){
+        if (request.getShortDes() != null) {
             c.setShortDes(request.getShortDes());
         }
-        if(request.getRequirement()!=null){
+        if (request.getRequirement() != null) {
 
             c.setRequirement(request.getRequirement());
         }
-        if(request.getCategoryId() != 0){
+        if (request.getCategoryId() != 0) {
             c.setCategoryId(request.getCategoryId());
         }
-        if(request.getPrice() != 0){
+        if (request.getPrice() != 0) {
             c.setPrice(request.getPrice());
         }
-        if(request.getPriceSale() != 0){
+        if (request.getPriceSale() != 0) {
             c.setPriceSale(request.getPriceSale());
         }
-        if(request.getStatus() != null){
+        if (request.getStatus() != null) {
             c.setStatus(request.getStatus());
         }
-        if(request.getMediaId() != null){
+        if (request.getMediaId() != null) {
             c.setMediaId(request.getMediaId());
         }
         return courseRepository.save(c);
@@ -135,16 +189,16 @@ public class CourseServiceImpl extends BaseService implements CourseService{
     @Override
     public List<Course> listCourseForUserEnrolled() throws Exception {
         User user = getUser();
-        if (user ==null ) {
+        if (user == null) {
             throw new Exception(Translator.toLocale("access_denied"));
         }
-       List<Enroll> lstEnrolled = enrollRepository.findByUserId(user.getId());
+        List<Enroll> lstEnrolled = enrollRepository.findByUserId(user.getId());
         List<Course> lstCourse = lstEnrolled.stream().map(
                 Enroll::getCourse
         ).collect(Collectors.toList());
 
-        for(Course course: lstCourse ){
-            setProgress(course,user.getId());
+        for (Course course : lstCourse) {
+            setProgress(course, user.getId());
         }
 
 
@@ -158,21 +212,21 @@ public class CourseServiceImpl extends BaseService implements CourseService{
         List<Long> lessonList = lessonRepository.listLessonByListCoursePartId(coursePartListId)
                 .stream().map(Lesson::getId).collect(Collectors.toList());
 
-        List<LessonProgress> lessonProgresses = lessonRepository.listLearningLessonProgress(id,lessonList);
+        List<LessonProgress> lessonProgresses = lessonRepository.listLearningLessonProgress(id, lessonList);
         int lessonDone = 0;
-        for(LessonProgress lsProgress: lessonProgresses){
-            if(lsProgress.getProgress() == null){
+        for (LessonProgress lsProgress : lessonProgresses) {
+            if (lsProgress.getProgress() == null) {
                 lsProgress.setProgress(0.0);
             }
-            if(lsProgress.getProgress() == 100){
+            if (lsProgress.getProgress() == 100) {
                 lessonDone++;
             }
         }
         double total = lessonProgresses.size();
         double courseProgress = lessonDone / total * 100;
-        if(total == 0){
+        if (total == 0) {
             course.setProgress(0);
-        }else {
+        } else {
             course.setProgress(courseProgress);
         }
 

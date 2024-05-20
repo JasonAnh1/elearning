@@ -58,6 +58,17 @@ public class User extends DateAudit{
     @Transient
     private RoleName roleName;
 
+    @Transient
+    private User organization;
+
+    public User getOrganization() {
+        return organization;
+    }
+
+    public void setOrganization(User organization) {
+        this.organization = organization;
+    }
+
     public Long getOrganizationId() {
         return organizationId;
     }

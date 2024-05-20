@@ -7,6 +7,8 @@ import com.jason.elearning.entity.constants.TransactionStatus;
 import com.jason.elearning.entity.constants.TransactionType;
 import com.jason.elearning.entity.request.ItemOrder;
 import com.jason.elearning.entity.request.PlaceOrderRequest;
+import com.jason.elearning.repository.book.BookRepository;
+import com.jason.elearning.repository.book.ReadRepository;
 import com.jason.elearning.repository.course.CoursePartRepository;
 import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.repository.course.LessonRepository;
@@ -39,7 +41,10 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
     private CoursePartRepository coursePartRepository;
     @Autowired
     private CourseRepository courseRepository;
-
+    @Autowired
+    private ReadRepository readRepository;
+    @Autowired
+    private BookRepository bookRepository;
 
     @Override
     public List<Enroll> placeOrder(PlaceOrderRequest request) throws Exception {
@@ -53,6 +58,11 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
         List<ItemOrder> items = request.getItems();
         List<List<LessonProgress>> lessonProgresses = new ArrayList<>();
         for (ItemOrder item : items) {
+            Transaction trans = new Transaction();
+            trans.setTransCode(request.getTransCode());
+            trans.setType(TransactionType.CONTENT_PAYMENT);
+            trans.setStatus(TransactionStatus.SUCCESS);
+            trans.setSender_id(user.getId());
             if (item.getType().equals("COURSE")) {
 
                 Long courseId = item.getId();
@@ -63,18 +73,12 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
                 Long lectureId = course.getAuthor().getId();
 
                 // tạo 1 transaction với từng khóa học để có thể thống kê được doanh thu cho lecture sau này
-                Transaction trans = new Transaction();
                 trans.setAmount(course.getPriceSale());
-                trans.setTransCode(request.getTransCode());
-                trans.setType(TransactionType.CONTENT_PAYMENT);
-                trans.setStatus(TransactionStatus.SUCCESS);
-                trans.setSender_id(user.getId());
                 trans.setReceiver_id(lectureId);
                 // add vào lst transaction đã khởi tạo
                 lstTransactions.add(trans);
 
                 // Tạo một bản ghi enroll mới biểu thị một khóa học được đặt hàng
-
                 Enroll enroll = new Enroll();
                 enroll.setUserId(user.getId()); // Liên kết với người dùng đặt hàng
                 enroll.setCourseId(item.getId()); // Thiết lập ID của khóa học
@@ -108,6 +112,22 @@ public class EnrollServiceImpl extends BaseService implements EnrollService{
                 } catch (Exception ignored) {
                 }
 
+            }
+            else if(item.getType().equals("BOOK")){
+
+                Book book = bookRepository.findById(item.id).orElseThrow(() -> new Exception("can not find book"));;
+
+                Read read = new Read();
+                read.setBookId(item.id);
+                read.setUserId(user.getId());
+                read.setCurrentChapter(1);
+                readRepository.save(read);
+
+                // tạo 1 transaction với từng khóa học để có thể thống kê được doanh thu cho lecture sau này
+                trans.setAmount(book.getPriceSale());
+                trans.setReceiver_id(book.getAuthorId());
+                // add vào lst transaction đã khởi tạo
+                lstTransactions.add(trans);
             }
         }
 

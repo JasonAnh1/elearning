@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, Long>,UserRepository
     Boolean existsByName(String name);
 
     List<User> findALlByOrganizationId(Long id);
+
+    User findFirstByOrganizationIdAndId(Long organizationId, Long userId);
 }

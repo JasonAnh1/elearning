@@ -3,6 +3,7 @@ package com.jason.elearning.service.course;
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Category;
 import com.jason.elearning.entity.User;
+import com.jason.elearning.entity.constants.CategoryType;
 import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.repository.course.CourseCategoryRepository;
 import com.jason.elearning.service.BaseService;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CategoryServiceImpl extends BaseService implements CategoryService {
@@ -29,7 +31,10 @@ public class CategoryServiceImpl extends BaseService implements CategoryService 
     @Override
     public List<Category> listCourseCategory() throws Exception {
 
-        return courseCategoryRepository.findAll();
+        return courseCategoryRepository.findAll()
+                .stream()
+                .filter(category -> category.getType().equals(CategoryType.COURSE))
+                .collect(Collectors.toList());
     }
 
     @Override

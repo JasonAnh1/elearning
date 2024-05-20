@@ -10,6 +10,7 @@ import com.jason.elearning.entity.constants.UserActive;
 import com.jason.elearning.entity.request.EnrollRequest;
 import com.jason.elearning.entity.request.PlanCourseRequest;
 import com.jason.elearning.repository.course.CoursePartRepository;
+import com.jason.elearning.repository.course.LessonRepository;
 import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.repository.plan.PlanCourseRepository;
 import com.jason.elearning.repository.plan.PlanRepository;
@@ -68,6 +69,9 @@ class UserServiceImpl extends BaseService implements UserService {
 
     @Autowired
     private LessonProgressRepository lessonProgressRepository;
+
+    @Autowired
+    private LessonRepository lessonRepository;
     /////////////////////User///////////
 
 
@@ -92,6 +96,12 @@ class UserServiceImpl extends BaseService implements UserService {
             throw new Exception("Tài khoản đã bị xoá");
         }
         String jwt = tokenProvider.generateToken(authentication);
+
+        if(user.getOrganizationId() != null)
+        {
+            User org = userRepository.findUserById(user.getOrganizationId());
+            user.setOrganization(org);
+        }
         user.setAccessToken(jwt);
         return user;
     }
@@ -198,20 +208,29 @@ class UserServiceImpl extends BaseService implements UserService {
         if (userId == null || me.getId() == userId) {
             return me;
         }
-        User user = userRepository.findById(userId).orElseThrow(() -> new Exception("Không tìm thấy người dùng"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new Exception("Cannot find user"));
         User response = new User();
         response.setId(user.getId());
         response.setName(user.getName());
         response.setEmail(user.getEmail());
         response.setPhone(user.getPhone());
         response.setAvatar(user.getAvatar());
-        response.setBirthday(user.getBirthday());
         return response;
     }
 
     @Override
     public User updateProfile(User request) throws Exception {
-        return null;
+        User user = userRepository.findById(request.getId()).orElseThrow(() -> new Exception("Cannot find user"));
+        if(request.getEmail() != null){
+            user.setEmail(request.getEmail());
+        }
+        if(request.getPhone() != null){
+            user.setPhone(request.getPhone());
+        }
+        if(request.getAvatarId() !=  null){
+            user.setAvatarId(request.getAvatarId());
+        }
+        return userRepository.save(user);
     }
 
     @Override
@@ -432,4 +451,63 @@ class UserServiceImpl extends BaseService implements UserService {
 
         return planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getId());
     }
+
+    @Override
+    public User removeMember(Long userId) throws Exception {
+        User user = getUser();
+        if (user ==null || user.getRoles().get(0).getName() != RoleName.ROLE_ORGANIZATION) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        User removeUser = userRepository.findFirstByOrganizationIdAndId(user.getId(),userId);
+        removeUser.setOrganizationId(null);
+
+        // tien hanh xoa toan bo cac tien trinh cua khoa hoc ma nguoi dung thuoc org do,
+        // cac khoa hoc khong tu mua khi bi remove khoi org
+        Plan plan = planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getId());
+        // tim cac khoa hoc cua org
+        List<Long> listCourseId = planCourseRepository.findAllByPlanId(plan.getId())
+                .stream()
+                .map(PlanCourse::getCourseID)
+                .collect(Collectors.toList());
+
+        // tim cac khoa hoc cua nguoi dung tu enroll
+        List<Long> enrollList = enrollRepository.findByUserId(userId).stream()
+                .map(Enroll::getCourseId)
+                .collect(Collectors.toList());
+
+        // lay ra cac khoa hoc ma cua org chứ người dùng không đăng ký
+        listCourseId.removeAll(enrollList);
+        // tien hanh xoa progress
+        List<CoursePart> coursePartList = new ArrayList<>();
+        listCourseId.forEach(
+                courseId -> {
+                    List<CoursePart> temp = coursePartRepository.findAllByCourseId(courseId);
+                    coursePartList.addAll(temp);
+                }
+        );
+
+        List<Long> listLessonId = lessonRepository
+                .listLessonByListCoursePartId(coursePartList
+                        .stream()
+                        .map(CoursePart::getId)
+                        .collect(Collectors.toList()))
+                .stream()
+                .map(Lesson::getId)
+                .collect(Collectors.toList());
+
+        List<LessonProgress> lessonProgressList = new ArrayList<>();
+
+        listLessonId.forEach(
+                lessonId ->{
+                    lessonProgressList.add(
+                            lessonProgressRepository.findFirstByUserIdAndLessonId(userId,lessonId)
+                    );
+                }
+        );
+
+        lessonProgressRepository.deleteAll(lessonProgressList);
+        return removeUser;
+    }
+
+
 }

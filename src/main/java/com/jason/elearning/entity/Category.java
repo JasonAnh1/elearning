@@ -24,4 +24,10 @@ public class Category extends DateAudit {
 
     private CategoryType type;
 
+    private Long avatarId;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "avatarId", referencedColumnName = "id", insertable = false, updatable = false)
+    private UploadFile avatar;
+
 }

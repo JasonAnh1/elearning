@@ -146,4 +146,5 @@ public class BookRepositoryImpl extends BaseRepository implements BookRepository
                 .limit(PAGE_SIZE)
                 .fetchCount();
     }
+
 }

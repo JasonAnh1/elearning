@@ -39,4 +39,23 @@ public class UserController extends BaseController {
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+
+    @GetMapping("v1/info-users")
+    public ResponseEntity<?> userInfo (@RequestParam(required = false) Long id) {
+        try {
+
+            return ResponseEntity.ok(new BaseResponse("Success", userService.getUserInfo(id)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @PostMapping("v1/update-users")
+    public ResponseEntity<?> updateUserInfo (@Valid @RequestBody final User request) {
+        try {
+
+            return ResponseEntity.ok(new BaseResponse("Success", userService.updateProfile(request)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }
