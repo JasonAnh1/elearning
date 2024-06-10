@@ -4,8 +4,10 @@ import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.UploadFile;
 import com.jason.elearning.entity.response.BaseResponse;
 import com.jason.elearning.service.FileStorageService;
+import com.jason.elearning.util.KeystoreUtils;
 import com.jason.elearning.util.MultipartFileSender;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -17,6 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.cert.Certificate;
 
 @RestController
 @RequestMapping("/api/")
@@ -24,7 +31,47 @@ import java.io.File;
 public class FileController extends BaseController{
     @Autowired
     private FileStorageService fileStorageService;
+    @PostMapping("/sign-pdf")
+    public ResponseEntity<?> signPdf(@RequestParam("pdf") MultipartFile pdfFile) throws Exception {
+        byte[] pdfData = pdfFile.getBytes();
 
+        KeyStore keystore = KeystoreUtils.loadKeyStore("src/main/resources/keystore.jks", "jasonanh1");
+        PrivateKey privateKey = KeystoreUtils.getPrivateKey(keystore, "mykeyalias", "jasonanh1");
+        byte[] signedPdfData = KeystoreUtils.signData(privateKey, pdfData);
+
+        Resource signedPdfResource = new ByteArrayResource(signedPdfData);
+
+// Sử dụng signedPdfData thay vì pdfData
+//        return ResponseEntity.ok()
+//                .contentType(MediaType.APPLICATION_PDF)
+//                .body(new InputStreamResource(new ByteArrayInputStream(signedPdfData)));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new ByteArrayResource(signedPdfData));
+    }
+
+        @PostMapping("/verify-signature")
+    public ResponseEntity<?> verifySignature(@RequestParam("pdf") MultipartFile pdfFile) throws Exception {
+        byte[] signedPdfData = pdfFile.getBytes();
+
+        int signatureLength = 256; // Độ dài của chữ ký (phụ thuộc vào thuật toán và độ dài khóa)
+        int pdfDataLength = signedPdfData.length - signatureLength;
+        byte[] pdfData = new byte[pdfDataLength];
+        byte[] signature = new byte[signatureLength];
+        System.arraycopy(signedPdfData, 0, pdfData, 0, pdfDataLength);
+        System.arraycopy(signedPdfData, pdfDataLength, signature, 0, signatureLength);
+
+
+        KeyStore keystore = KeystoreUtils.loadKeyStore("src/main/resources/keystore.jks", "jasonanh1");
+        Certificate certificate = keystore.getCertificate("mykeyalias");
+        PublicKey publicKey = certificate.getPublicKey();
+
+        Signature verifier = Signature.getInstance("SHA256withRSA");
+        verifier.initVerify(publicKey);
+        verifier.update(pdfData);
+
+        return ResponseEntity.ok(verifier.verify(signature));
+    }
     @PostMapping("v1/file/upload-image")
     public ResponseEntity<?> uploadImage1(HttpServletRequest httpServletRequest, @RequestParam("file") final MultipartFile file) {
         try {
@@ -86,6 +133,7 @@ public class FileController extends BaseController{
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+
     @GetMapping("video/{fileName:.+}")
     public void streamVideo(HttpServletResponse response, HttpServletRequest request, @PathVariable final String fileName) throws Exception {
         Resource resource = fileStorageService.loadFileAsResource(fileName);
@@ -99,5 +147,6 @@ public class FileController extends BaseController{
             e.printStackTrace();
         }
     }
+
 }
 

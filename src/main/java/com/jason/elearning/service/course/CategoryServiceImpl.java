@@ -45,9 +45,16 @@ public class CategoryServiceImpl extends BaseService implements CategoryService 
             throw new Exception(Translator.toLocale("access_denied"));
         }
         Category category = courseCategoryRepository.findById(request.getId()).orElseThrow(()-> new Exception("can not find category"));
-        category.setDescription(request.getDescription());
         category.setTitle(request.getTitle());
-        category.setDeleted(request.getDeleted());
-        return category;
+        category.setDescription(request.getDescription());
+        if(request.getAvatarId() != null){
+            category.setAvatarId(request.getAvatarId());
+        }
+        return courseCategoryRepository.save(category);
+    }
+
+    @Override
+    public List<Category> listCategories() throws Exception {
+        return courseCategoryRepository.findAll();
     }
 }

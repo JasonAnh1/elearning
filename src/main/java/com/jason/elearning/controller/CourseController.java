@@ -2,9 +2,9 @@ package com.jason.elearning.controller;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.Course;
-import com.jason.elearning.entity.Category;
 import com.jason.elearning.entity.CoursePart;
 import com.jason.elearning.entity.Lesson;
+import com.jason.elearning.entity.constants.CourseLevel;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.request.QuizzesRequest;
 import com.jason.elearning.entity.request.WrappUpdateQuizzLesson;
@@ -138,13 +138,14 @@ public class CourseController extends BaseController{
                                            @RequestParam(required = false) String title,
                                            @RequestParam(required = false) Long categoryId,
                                            @RequestParam(required = false) Long authorId,
+                                           @RequestParam(required = false) CourseLevel level,
                                            @RequestParam(required = false) String authorName,
                                            @RequestParam(required = false) CourseStatus status,
                                            @RequestParam(required = false) Long startPrice,
                                            @RequestParam(required = false) Long endPrice) {
         try {
 
-            return ResponseEntity.ok(new BaseResponse("Success", courseService.listCourse(page, categoryId, title, authorId,authorName,status,startPrice,endPrice),courseService.countListCourse(categoryId, title, authorId,authorName,status,startPrice,endPrice)) );
+            return ResponseEntity.ok(new BaseResponse("Success", courseService.listCourse(page, categoryId, title, authorId,authorName,status,startPrice,endPrice,level),courseService.countListCourse(categoryId, title, authorId,authorName,status,startPrice,endPrice,level)) );
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
@@ -167,37 +168,7 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
-    @PostMapping("v1/create-course-category")
-    public ResponseEntity<?> createCourseCategory(@Valid @RequestBody final Category request) {
-        try {
-            if(request == null || request.getTitle() == null) {
-                throw new Exception(Translator.toLocale("required_fields"));
-            }
-            return ResponseEntity.ok( categoryService.createCourseCategory(request));
-        } catch (Exception ex) {
-            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
-        }
-    }
-    @GetMapping("v1/publish/list-course-categories")
-    public ResponseEntity<?> listAllCategories() {
-        try {
 
-            return ResponseEntity.ok( categoryService.listCourseCategory());
-        } catch (Exception ex) {
-            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
-        }
-    }
-    @PostMapping("v1/update-course-categories")
-    public ResponseEntity<?> updateCourseCategory(@Valid @RequestBody final Category request) {
-        try {
-            if(request == null || request.getId() == 0) {
-                throw new Exception(Translator.toLocale("required_fields"));
-            }
-            return ResponseEntity.ok( categoryService.updateCourseCategory(request));
-        } catch (Exception ex) {
-            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
-        }
-    }
 
     @PostMapping("v1/update-quizzes")
     public ResponseEntity<?> updateQuizzes(@RequestBody  WrappUpdateQuizzLesson request) {

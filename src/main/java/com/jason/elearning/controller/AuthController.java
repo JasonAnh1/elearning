@@ -49,7 +49,8 @@ public class AuthController extends BaseController{
                     || request.getPhone() == null
                     || request.getPassword() == null
                     || request.getEmail() == null
-                    || request.getName() == null) {
+                    || request.getName() == null
+                    ) {
                 throw new Exception(Translator.toLocale("required_fields"));
             }
 //            return ResponseEntity.badRequest().body(new BaseResponse("Tính năng này đang tạm khoá", null));

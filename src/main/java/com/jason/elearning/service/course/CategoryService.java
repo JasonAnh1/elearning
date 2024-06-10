@@ -8,4 +8,5 @@ public interface CategoryService {
     Category createCourseCategory(Category category) throws Exception;
     List<Category> listCourseCategory() throws Exception;
     Category updateCourseCategory(Category category) throws Exception;
+    List<Category> listCategories() throws Exception;
 }

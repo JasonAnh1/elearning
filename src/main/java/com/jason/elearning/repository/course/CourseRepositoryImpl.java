@@ -4,6 +4,7 @@ import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.Enroll;
 import com.jason.elearning.entity.QCourse;
 import com.jason.elearning.entity.QEnroll;
+import com.jason.elearning.entity.constants.CourseLevel;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.repository.BaseRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -17,7 +18,7 @@ import static com.jason.elearning.util.Util.PAGE_SIZE;
 
 public class CourseRepositoryImpl extends BaseRepository implements CourseRepositoryCustom{
     @Override
-    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, Long userId) {
+    public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, Long userId, CourseLevel level) {
         QCourse qCourse = QCourse.course;
         QEnroll qEnroll = QEnroll.enroll;
         BooleanBuilder builder = new BooleanBuilder();
@@ -30,6 +31,9 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
         }
         if(categoryId != 0){
             builder.and(qCourse.categoryId.eq(categoryId));
+        }
+        if(level != null){
+            builder.and(qCourse.level.eq(level));
         }
         if(status != null){
             builder.and(qCourse.status.eq(status));
@@ -92,7 +96,7 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
     }
 
     @Override
-    public Long countGetCourse(String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) {
+    public Long countGetCourse(String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice,CourseLevel level) {
         QCourse qCourse = QCourse.course;
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(qCourse.deleted.eq(false));
@@ -107,6 +111,9 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
         }
         if (StringUtils.isNotEmpty(authorName)){
             builder.and(qCourse.author.name.like("%"+ authorName + "%"));
+        }
+        if(level != null){
+            builder.and(qCourse.level.eq(level));
         }
         if(startPrice != 0){
             builder.and(qCourse.priceSale.goe(startPrice));

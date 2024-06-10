@@ -467,6 +467,7 @@ public class CoursePartServiceImpl extends BaseService implements CoursePartServ
         LessonProgress lessonProgressUpdate = lessonProgressRepository.findFirstByUserIdAndLessonId(user.getId(), request.getLessonId());
         lessonProgressUpdate.setProgress(100.0);
         lessonProgressRepository.save(lessonProgressUpdate);
+
         Lesson lesson = lessonRepository.findById(request.getLessonId())
                 .orElseThrow(() -> new Exception("can not find lesson"));
         int passThreshold = lesson.getPassThreshold();

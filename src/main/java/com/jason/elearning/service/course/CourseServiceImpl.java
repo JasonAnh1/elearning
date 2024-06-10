@@ -2,6 +2,7 @@ package com.jason.elearning.service.course;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
+import com.jason.elearning.entity.constants.CourseLevel;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.RoleName;
 import com.jason.elearning.repository.comment.CourseCommentRepository;
@@ -61,10 +62,10 @@ public class CourseServiceImpl extends BaseService implements CourseService {
     }
 
     @Override
-    public List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception {
+    public List<Course> listCourse(int page, Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice,CourseLevel level) throws Exception {
 
         User user = getUser();
-        List<Course> lstCourse = courseRepository.getCourse(page, title, categoryId, authorId, authorName, status, startPrice, endPrice, user == null ? -1 : user.getId());
+        List<Course> lstCourse = courseRepository.getCourse(page, title, categoryId, authorId, authorName, status, startPrice, endPrice, user == null ? -1 : user.getId(),  level);
         // update logic org , if user in org and that course was in there pack user cant not buy anymore
         if (user != null && user.getOrganizationId() != null) {
             Plan plan = planRepository.findFirstByOrganizationIdOrderByCreatedAtDesc(user.getOrganizationId());
@@ -122,8 +123,8 @@ public class CourseServiceImpl extends BaseService implements CourseService {
 
 
     @Override
-    public Long countListCourse(Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice) throws Exception {
-        return courseRepository.countGetCourse(title, categoryId, authorId, authorName, status, startPrice, endPrice);
+    public Long countListCourse(Long categoryId, String title, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, CourseLevel level) throws Exception {
+        return courseRepository.countGetCourse(title, categoryId, authorId, authorName, status, startPrice, endPrice, level);
     }
 
     @Override

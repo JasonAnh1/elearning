@@ -30,6 +30,7 @@ public class User extends DateAudit{
 
     private String password;
 
+    private String fullName;
 
     private Long avatarId;
 
@@ -164,8 +165,13 @@ public class User extends DateAudit{
     }
 
 
+    public String getFullName() {
+        return fullName;
+    }
 
-
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
     public Date getBirthday() {
         return birthday;

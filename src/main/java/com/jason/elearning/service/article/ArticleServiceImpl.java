@@ -43,6 +43,15 @@ public class ArticleServiceImpl extends BaseService implements ArticleService{
         if(request.getContent() != null){
             article.setContent(request.getContent());
         }
+        if(request.getMedia() != null)
+        {
+            article.setMediaId(request.getMediaId());
+        }
+        if(request.getTitle() != null)
+        {
+            article.setTitle(request.getTitle());
+        }
+
         return articleRepository.save(article);
     }
 
