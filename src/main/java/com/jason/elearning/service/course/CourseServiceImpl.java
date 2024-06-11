@@ -200,10 +200,22 @@ public class CourseServiceImpl extends BaseService implements CourseService {
 
         for (Course course : lstCourse) {
             setProgress(course, user.getId());
+            setFirstLessonId(course);
         }
 
 
+
         return lstCourse;
+    }
+
+    private void setFirstLessonId(Course course){
+        CoursePart firstCoursePart = coursePartRepository.findFirstByCourseIdOrderByPartNumberAsc(course.getId());
+        if(firstCoursePart != null){
+            Lesson firstLesson = lessonRepository.findFirstByPartIdOrderByPositionAsc(firstCoursePart.getId());
+            if(firstLesson != null){
+                course.setFirstLesson(firstLesson.getId());
+            }
+        }
     }
 
     private void setProgress(Course course, long id) {

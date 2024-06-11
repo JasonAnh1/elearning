@@ -12,5 +12,6 @@ public interface CoursePartRepository extends JpaRepository<CoursePart,Long> , C
     List<CoursePart> findAllByCourseId(Long courseId);
     List<CoursePart> findAllByCourseIdOrderByPartNumber(Long courseId);
     Optional<CoursePart> findFirstByCourseIdAndPartNumber(long courseId, int partNumber);
+    CoursePart findFirstByCourseIdOrderByPartNumberAsc(Long courseId);
 
 }

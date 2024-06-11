@@ -9,4 +9,5 @@ public interface LessonRepositoryCustom {
     List<Lesson> listLessonOrderByDateCreate(Long courseSectionId);
     List<LessonProgress> listLearningLessonProgress(Long userId, List<Long> lessonIds);
     List<Lesson> listLessonByListCoursePartId(List<Long> coursePartId);
+
 }

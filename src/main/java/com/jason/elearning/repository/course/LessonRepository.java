@@ -11,5 +11,5 @@ import java.util.Optional;
 public interface LessonRepository extends JpaRepository<Lesson,Long>, LessonRepositoryCustom {
      Optional<Lesson> findFirstByPart_IdAndPosition(long coursePartId, int position);
      List<Lesson> findAllByCoursePartIdOrderByPositionAsc(long coursePartId);
-
+     Lesson findFirstByPartIdOrderByPositionAsc(long coursePartId);
 }

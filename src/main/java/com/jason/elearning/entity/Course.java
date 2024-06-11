@@ -62,6 +62,9 @@ public class Course extends DateAudit{
 
     @Transient
     private double progress;
+
+    @Transient
+    private long firstLesson;
 //    @OneToMany(mappedBy = "course",fetch = FetchType.LAZY,cascade = CascadeType.ALL)
 //    private Set<CoursePart> courseParts;
 //
