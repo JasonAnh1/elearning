@@ -38,13 +38,6 @@ public class FileController extends BaseController{
         KeyStore keystore = KeystoreUtils.loadKeyStore("src/main/resources/keystore.jks", "jasonanh1");
         PrivateKey privateKey = KeystoreUtils.getPrivateKey(keystore, "mykeyalias", "jasonanh1");
         byte[] signedPdfData = KeystoreUtils.signData(privateKey, pdfData);
-
-        Resource signedPdfResource = new ByteArrayResource(signedPdfData);
-
-// Sử dụng signedPdfData thay vì pdfData
-//        return ResponseEntity.ok()
-//                .contentType(MediaType.APPLICATION_PDF)
-//                .body(new InputStreamResource(new ByteArrayInputStream(signedPdfData)));
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(new ByteArrayResource(signedPdfData));

@@ -1,13 +1,13 @@
 package com.jason.elearning.service.transaction;
 
 import com.jason.elearning.configuration.Translator;
+import com.jason.elearning.entity.Course;
 import com.jason.elearning.entity.Transaction;
 import com.jason.elearning.entity.User;
-import com.jason.elearning.entity.constants.RoleName;
-import com.jason.elearning.entity.constants.TransactionStatus;
-import com.jason.elearning.entity.constants.TransactionType;
-import com.jason.elearning.entity.constants.UserActive;
+import com.jason.elearning.entity.constants.*;
+import com.jason.elearning.entity.request.PromoteRequest;
 import com.jason.elearning.entity.request.VerifyRequest;
+import com.jason.elearning.repository.course.CourseRepository;
 import com.jason.elearning.repository.transaction.TransactionRepository;
 import com.jason.elearning.repository.user.UserRepository;
 import com.jason.elearning.security.CustomUserDetailsService;
@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class TransactionServiceImpl extends BaseService implements TransactionService{
@@ -29,7 +30,8 @@ public class TransactionServiceImpl extends BaseService implements TransactionSe
     private UserRepository userRepository;
     @Autowired
     private JwtTokenProvider tokenProvider;
-
+    @Autowired
+    private CourseRepository courseRepository;
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
     @Override
@@ -106,5 +108,28 @@ public class TransactionServiceImpl extends BaseService implements TransactionSe
         }
 
         return transactionRepository.calculateLectureNetProfitByYear(year, user.getId());
+    }
+
+    @Override
+    public Course savePromote(PromoteRequest request) throws Exception {
+        User user = getUser();
+        if (user ==null) {
+            throw new Exception(Translator.toLocale("access_denied"));
+        }
+        Transaction transaction = new Transaction();
+        transaction.setStatus(TransactionStatus.SUCCESS);
+        transaction.setAmount(request.amount);
+        transaction.setSender_id(user.getId());
+        transaction.setTransCode(request.getTransCode());
+        transaction.setType(TransactionType.PROMOTION_FEE);
+        transactionRepository.save(transaction);
+
+        Course course = courseRepository.findById(request.getCourseId()).orElseThrow(() -> new Exception("can not find course"));
+        course.setAdvertise(CourseAdvertise.PROMOTE);
+        return courseRepository.save(course);
+    }
+    @Override
+    public Optional<Long> getTotalAmountByReceiverIdAndYearAndMonth(Long receiverId, int year, int month) {
+        return transactionRepository.findTotalAmountByReceiverIdAndYearAndMonth(receiverId, year, month);
     }
 }

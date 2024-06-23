@@ -43,12 +43,14 @@ public class ArticleController extends BaseController{
     }
 
     @GetMapping("v1/publish/get-articles")
-    public ResponseEntity<?> getBooks(@RequestParam(required = false)  final int page,
-                                      @RequestParam(required = false) String title
+    public ResponseEntity<?> getBooks(@RequestParam(required = false) final int page,
+                                      @RequestParam(required = false) String title,
+                                      @RequestParam(required = false) Long authorId,
+                                      @RequestParam(required = false) Long ownerId
                                      ) {
         try {
 
-            return ResponseEntity.ok( articleService.listArticle());
+            return ResponseEntity.ok( new BaseResponse("success",articleService.listArticle(page, ownerId),articleService.countListArticle(ownerId)));
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }

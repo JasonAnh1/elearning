@@ -14,8 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.jason.elearning.util.Util.PAGE_SIZE;
-
 public class CourseRepositoryImpl extends BaseRepository implements CourseRepositoryCustom{
     @Override
     public List<Course> getCourse(int page, String title, Long categoryId, Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, Long userId, CourseLevel level) {
@@ -59,8 +57,8 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .where(builder)
                 .groupBy(qCourse.id)
                 .select(qCourse, qEnroll.count())
-                .offset((long) page * PAGE_SIZE)
-                .limit(PAGE_SIZE)
+                .offset((long) page * 8)
+                .limit(8)
                 .orderBy(qCourse.id.desc())
                 .fetch()
                 .stream()
@@ -142,6 +140,20 @@ public class CourseRepositoryImpl extends BaseRepository implements CourseReposi
                 .where(builder)
                 .select(qCourse)
                 .orderBy(qCourse.id.desc())
+                .fetch();
+    }
+
+    @Override
+    public List<Course> listAllByTitle(String title) {
+        QCourse qCourse = QCourse.course;
+        BooleanBuilder builder = new BooleanBuilder();
+        if(StringUtils.isNotBlank(title)){
+            builder.and(qCourse.title.like("%"+ title + "%"));
+        }
+
+        return  query().from(qCourse)
+                .where(builder)
+                .select(qCourse)
                 .fetch();
     }
 }

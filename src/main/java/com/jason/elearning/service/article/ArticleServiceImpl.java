@@ -25,10 +25,6 @@ public class ArticleServiceImpl extends BaseService implements ArticleService{
         return articleRepository.save(request);
     }
 
-    @Override
-    public List<Article> listArticle() throws Exception {
-        return articleRepository.findAll();
-    }
 
     @Override
     public Article updateArticle(Article request) throws Exception {
@@ -68,5 +64,15 @@ public class ArticleServiceImpl extends BaseService implements ArticleService{
         articleRepository.delete(article);
 
         return "Success";
+    }
+
+    @Override
+    public List<Article> listArticle(int page, Long ownerId) {
+        return articleRepository.listArticle(page,ownerId);
+    }
+
+    @Override
+    public Long countListArticle(Long ownerId) {
+        return articleRepository.countListArticle(ownerId);
     }
 }

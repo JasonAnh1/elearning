@@ -150,7 +150,7 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
-        @GetMapping("v1/publish/list-course-section")
+    @GetMapping("v1/publish/list-course-section")
     public ResponseEntity<?> listAllCourse(@RequestParam final long courseId) {
         try {
 
@@ -168,7 +168,17 @@ public class CourseController extends BaseController{
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
-
+    @GetMapping("v1/promote-course")
+    public ResponseEntity<?> promoteCourse(@RequestParam final Long courseId) {
+        try {
+            if(courseId == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( courseService.promoteCourse(courseId));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 
     @PostMapping("v1/update-quizzes")
     public ResponseEntity<?> updateQuizzes(@RequestBody  WrappUpdateQuizzLesson request) {
@@ -182,4 +192,13 @@ public class CourseController extends BaseController{
         }
     }
 
+    @GetMapping("v1/publish/list-all-course")
+    public ResponseEntity<?> listAllCourses (@RequestParam(required = false) String title) {
+        try {
+
+            return ResponseEntity.ok(new BaseResponse("Success", courseService.listAllCourse( title)));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
 }

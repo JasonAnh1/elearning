@@ -39,7 +39,15 @@ public class UserController extends BaseController {
             return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
     }
+    @GetMapping("v1/list-lecturer")
+    public ResponseEntity<?> listLecturer(@RequestParam(required = false) String name) {
+        try {
 
+            return ResponseEntity.ok(new BaseResponse("Success", userService.getListLecturer(name)));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
     @GetMapping("v1/info-users")
     public ResponseEntity<?> userInfo (@RequestParam(required = false) Long id) {
         try {

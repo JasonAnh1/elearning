@@ -61,9 +61,18 @@ public class User extends DateAudit{
 
     @Transient
     private User organization;
-
+    @Transient
+    private double revenue;
     public User getOrganization() {
         return organization;
+    }
+
+    public double getRevenue() {
+        return revenue;
+    }
+
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
     }
 
     public void setOrganization(User organization) {

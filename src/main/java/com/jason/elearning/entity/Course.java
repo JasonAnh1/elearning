@@ -1,5 +1,6 @@
 package com.jason.elearning.entity;
 
+import com.jason.elearning.entity.constants.CourseAdvertise;
 import com.jason.elearning.entity.constants.CourseLevel;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.CourseType;
@@ -38,7 +39,7 @@ public class Course extends DateAudit{
     @Column(columnDefinition = "TEXT")
     private String requirement;
     private Double rating;
-    private String advertise;
+    private CourseAdvertise advertise;
     private CourseStatus status;
     private CourseType type;
     private Long mediaId;

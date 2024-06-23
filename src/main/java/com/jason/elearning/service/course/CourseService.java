@@ -14,4 +14,6 @@ public interface CourseService {
     Course getCourseById(Long courseId) throws Exception;
     Course updateCourse(Course course) throws  Exception;
     List<Course>listCourseForUserEnrolled() throws Exception;
+    Course promoteCourse(Long courseId) throws Exception;
+    List<Course> listAllCourse(String title) throws Exception;
 }

@@ -2,6 +2,7 @@ package com.jason.elearning.service.course;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.*;
+import com.jason.elearning.entity.constants.CourseAdvertise;
 import com.jason.elearning.entity.constants.CourseLevel;
 import com.jason.elearning.entity.constants.CourseStatus;
 import com.jason.elearning.entity.constants.RoleName;
@@ -58,6 +59,7 @@ public class CourseServiceImpl extends BaseService implements CourseService {
         }
         course.setAuthorId(user.getId());
         course.setStatus(CourseStatus.PENDING);
+        course.setAdvertise(CourseAdvertise.NONE);
         return courseRepository.save(course);
     }
 
@@ -206,6 +208,22 @@ public class CourseServiceImpl extends BaseService implements CourseService {
 
 
         return lstCourse;
+    }
+
+    @Override
+    public Course promoteCourse(Long courseId) throws Exception {
+        Course course = courseRepository.findById(courseId).orElseThrow(() -> new Exception("can not find course"));
+        if(course.getAdvertise() == CourseAdvertise.PROMOTE){
+            course.setAdvertise(CourseAdvertise.NONE);
+        }else {
+            course.setAdvertise(CourseAdvertise.PROMOTE);
+        }
+        return courseRepository.save(course);
+    }
+
+    @Override
+    public List<Course> listAllCourse(String title) throws Exception {
+        return courseRepository.listAllByTitle(title);
     }
 
     private void setFirstLessonId(Course course){

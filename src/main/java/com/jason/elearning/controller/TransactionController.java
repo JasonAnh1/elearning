@@ -2,6 +2,7 @@ package com.jason.elearning.controller;
 
 import com.jason.elearning.configuration.Translator;
 import com.jason.elearning.entity.request.PlaceOrderRequest;
+import com.jason.elearning.entity.request.PromoteRequest;
 import com.jason.elearning.entity.request.VerifyRequest;
 import com.jason.elearning.entity.response.BaseResponse;
 import com.jason.elearning.service.enroll.EnrollService;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/")
@@ -41,6 +43,17 @@ public class TransactionController {
                 throw new Exception(Translator.toLocale("required_fields"));
             }
             return ResponseEntity.ok( transactionService.saveVerify(request));
+        } catch (Exception ex) {
+            return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
+        }
+    }
+    @PostMapping("v1/promote-transaction")
+    public ResponseEntity<?> verify(@Valid @RequestBody final PromoteRequest request) {
+        try {
+            if(request == null) {
+                throw new Exception(Translator.toLocale("required_fields"));
+            }
+            return ResponseEntity.ok( transactionService.savePromote(request));
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
@@ -90,5 +103,13 @@ public class TransactionController {
         } catch (Exception ex) {
             return  ResponseEntity.badRequest().body(new BaseResponse(ex.getMessage(), null));
         }
+    }
+    @GetMapping("/v1/transactions/total")
+    public Long getTotalAmount(
+            @RequestParam Long receiverId,
+            @RequestParam int year,
+            @RequestParam int month) {
+        Optional<Long> totalAmount = transactionService.getTotalAmountByReceiverIdAndYearAndMonth(receiverId, year, month);
+        return totalAmount.orElse(0L);
     }
 }

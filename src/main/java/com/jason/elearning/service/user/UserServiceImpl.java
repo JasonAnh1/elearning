@@ -14,6 +14,7 @@ import com.jason.elearning.repository.course.LessonRepository;
 import com.jason.elearning.repository.enroll.LessonProgressRepository;
 import com.jason.elearning.repository.plan.PlanCourseRepository;
 import com.jason.elearning.repository.plan.PlanRepository;
+import com.jason.elearning.repository.transaction.TransactionRepository;
 import com.jason.elearning.repository.user.EnrollRepository;
 import com.jason.elearning.repository.user.RoleRepository;
 import com.jason.elearning.repository.user.UserRepository;
@@ -72,6 +73,10 @@ class UserServiceImpl extends BaseService implements UserService {
 
     @Autowired
     private LessonRepository lessonRepository;
+
+    @Autowired
+    private TransactionRepository transactionRepository;
+
     /////////////////////User///////////
 
 
@@ -507,6 +512,12 @@ class UserServiceImpl extends BaseService implements UserService {
 
         lessonProgressRepository.deleteAll(lessonProgressList);
         return removeUser;
+    }
+
+    @Override
+    public List<User> getListLecturer(String name) throws Exception {
+
+        return userRepository.findUsersByRoleName(RoleName.ROLE_LECTURE);
     }
 
 

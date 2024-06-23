@@ -12,4 +12,5 @@ public interface CourseRepositoryCustom {
     List<Course> listForUserEnrolled(long categoryId,String status);
     Long countGetCourse( String title,Long categoryId,Long authorId, String authorName, CourseStatus status, Long startPrice, Long endPrice, CourseLevel level);
     List<Course> listByListIds(List<Long> ids);
+    List<Course> listAllByTitle(String Title);
 }
