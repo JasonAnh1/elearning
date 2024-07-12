@@ -1,6 +1,7 @@
 package com.jason.elearning.entity.request;
 
 import com.jason.elearning.entity.DateAudit;
+import com.jason.elearning.entity.constants.ReadStatus;
 import lombok.*;
 
 import javax.persistence.*;
@@ -21,4 +22,5 @@ public class Message extends DateAudit {
     private String receiverName;
     private String message;
     private Status status;
+    private ReadStatus readStatus;
 }
